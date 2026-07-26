@@ -486,6 +486,28 @@
     "generated_path": "generated/dehn_sommerville"
   },
   {
+    "id": "derived_solidification_free_CW_homology",
+    "title": "Derived solidification of free CW complexes (light condensed mathematics)",
+    "test": false,
+    "submitter": "Dagur Asgeirsson",
+    "module": "LeanEval.CondensedMathematics.DerivedSolidCWHomology",
+    "holes": [
+      "LightCondensed.Solid.solidification",
+      "LightCondensed.Solid.solidification_additive",
+      "LightCondensed.Solid.solidificationAdjunction",
+      "LightCondensed.Solid.derivedSolidification",
+      "LightCondensed.Solid.derivedSolidificationCounit",
+      "LightCondensed.Solid.derivedSolidification_isLeftDerivedFunctor",
+      "LightCondensed.Solid.derivedSolidificationAdjunction",
+      "LightCondensed.Solid.derivedSolidificationFreeCWFunctor",
+      "LightCondensed.Solid.derivedSolidificationFreeCWFunctorSpec",
+      "LightCondensed.Solid.derivedSolidification_free_CW_derivedNatIso",
+      "LightCondensed.Solid.derivedSolidification_free_CW_homologyIso",
+      "LightCondensed.Solid.derivedSolidification_free_CW_homology"
+    ],
+    "generated_path": "generated/derived_solidification_free_CW_homology"
+  },
+  {
     "id": "dirichlet_eigenvalues_eq_nat_sq",
     "title": "Dirichlet eigenvalues of -y'' = lambda y on [0,pi] are n^2",
     "test": false,
