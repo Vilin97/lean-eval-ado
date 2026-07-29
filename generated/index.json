@@ -22,6 +22,28 @@
     "generated_path": "generated/abel_ruffini"
   },
   {
+    "id": "adoCharZero",
+    "title": "Ado's theorem in characteristic zero",
+    "test": false,
+    "submitter": "Kim Morrison",
+    "module": "LeanEval.RepresentationTheory.AdoIwasawa",
+    "holes": [
+      "adoCharZero"
+    ],
+    "generated_path": "generated/adoCharZero"
+  },
+  {
+    "id": "adoIwasawa",
+    "title": "Ado\u2013Iwasawa theorem over an arbitrary field",
+    "test": false,
+    "submitter": "Kim Morrison",
+    "module": "LeanEval.RepresentationTheory.AdoIwasawa",
+    "holes": [
+      "adoIwasawa"
+    ],
+    "generated_path": "generated/adoIwasawa"
+  },
+  {
     "id": "alternating_sign_matrix_count",
     "title": "The alternating sign matrix theorem",
     "test": false,
