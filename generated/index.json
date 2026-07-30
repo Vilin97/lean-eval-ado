@@ -2099,6 +2099,17 @@
     "generated_path": "generated/shafarevich_relation_rank_bound"
   },
   {
+    "id": "shafarevich_solvable_galois",
+    "title": "Shafarevich's theorem on solvable Galois groups",
+    "test": false,
+    "submitter": "Ryan Smith",
+    "module": "LeanEval.NumberTheory.ShafarevichSolvableGalois",
+    "holes": [
+      "shafarevich_solvable_galois"
+    ],
+    "generated_path": "generated/shafarevich_solvable_galois"
+  },
+  {
     "id": "shannon_capacity_pentagon",
     "title": "Shannon capacity of the pentagon",
     "test": false,
