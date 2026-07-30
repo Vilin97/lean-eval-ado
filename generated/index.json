@@ -1016,6 +1016,17 @@
     "generated_path": "generated/higman_infinite_simple"
   },
   {
+    "id": "hilbert_smith_padic_dimension_three",
+    "title": "No continuous faithful \u2124_p action on a connected 3-manifold (Pardon 2013)",
+    "test": false,
+    "submitter": "Jack McCarthy",
+    "module": "LeanEval.Topology.HilbertSmith3D",
+    "holes": [
+      "hilbert_smith_padic_dimension_three"
+    ],
+    "generated_path": "generated/hilbert_smith_padic_dimension_three"
+  },
+  {
     "id": "hippocrates_lunes",
     "title": "Hippocrates' theorem on lunes",
     "test": false,
