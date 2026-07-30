@@ -1923,6 +1923,17 @@
     "generated_path": "generated/radon_transform_inversion"
   },
   {
+    "id": "ramanujan_petersson",
+    "title": "Ramanujan\u2013Petersson conjecture for the \u03c4-function (Deligne's theorem)",
+    "test": false,
+    "submitter": "Seewoo Lee",
+    "module": "LeanEval.NumberTheory.RamanujanTau",
+    "holes": [
+      "ramanujan_petersson"
+    ],
+    "generated_path": "generated/ramanujan_petersson"
+  },
+  {
     "id": "regular_value_ae",
     "title": "Sard's regular-value corollary",
     "test": false,
