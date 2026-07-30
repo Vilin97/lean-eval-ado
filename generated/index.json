@@ -2396,6 +2396,17 @@
     "generated_path": "generated/wallpaper_groups_17"
   },
   {
+    "id": "wang_zahl_kakeya_dimH",
+    "title": "Wang-Zahl: the three-dimensional Kakeya conjecture",
+    "test": false,
+    "submitter": "Kim Morrison",
+    "module": "LeanEval.Analysis.WangZahlKakeya",
+    "holes": [
+      "wang_zahl_kakeya_dimH"
+    ],
+    "generated_path": "generated/wang_zahl_kakeya_dimH"
+  },
+  {
     "id": "watanabe_four_dim_smale_disproof",
     "title": "Watanabe's disproof of the 4-dimensional Smale conjecture",
     "test": false,
