@@ -1714,6 +1714,17 @@
     "generated_path": "generated/parallel_postulate_independent"
   },
   {
+    "id": "pardon_torus_knot_distortion",
+    "title": "Pardon's lower bound for torus-knot distortion",
+    "test": false,
+    "submitter": "Kim Morrison",
+    "module": "LeanEval.KnotTheory.PardonDistortion",
+    "holes": [
+      "pardon_torus_knot_distortion"
+    ],
+    "generated_path": "generated/pardon_torus_knot_distortion"
+  },
+  {
     "id": "pascal",
     "title": "Pascal's theorem",
     "test": false,
