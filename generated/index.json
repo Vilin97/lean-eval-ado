@@ -2297,6 +2297,17 @@
     "generated_path": "generated/szemeredi"
   },
   {
+    "id": "ten_martini_problem",
+    "title": "Avila-Jitomirskaya Ten Martini Problem",
+    "test": false,
+    "submitter": "Kim Morrison",
+    "module": "LeanEval.Analysis.TenMartini",
+    "holes": [
+      "ten_martini_problem"
+    ],
+    "generated_path": "generated/ten_martini_problem"
+  },
+  {
     "id": "thue_siegel_roth",
     "title": "Thue\u2013Siegel\u2013Roth theorem (irrationality measure \u2264 2 for algebraic irrationals)",
     "test": false,
