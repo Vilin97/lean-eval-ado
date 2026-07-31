@@ -352,6 +352,17 @@
     "generated_path": "generated/ci_regenerate_main_check"
   },
   {
+    "id": "ckmrv_fourier_interpolation",
+    "title": "Fourier interpolation in dimensions 8 and 24",
+    "test": false,
+    "submitter": "Kim Morrison",
+    "module": "LeanEval.Analysis.CKMRVInterpolation",
+    "holes": [
+      "ckmrv_fourier_interpolation"
+    ],
+    "generated_path": "generated/ckmrv_fourier_interpolation"
+  },
+  {
     "id": "coherent_cohomology_finite_dimensional",
     "title": "Coherent cohomology of a proper scheme over \u211a is finite-dimensional",
     "test": false,
