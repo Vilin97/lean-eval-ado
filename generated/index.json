@@ -541,6 +541,17 @@
     "generated_path": "generated/dirichlet_eigenvalues_eq_nat_sq"
   },
   {
+    "id": "duffin_schaeffer",
+    "title": "Duffin-Schaeffer conjecture",
+    "test": false,
+    "submitter": "Kim Morrison",
+    "module": "LeanEval.NumberTheory.DuffinSchaeffer",
+    "holes": [
+      "duffin_schaeffer"
+    ],
+    "generated_path": "generated/duffin_schaeffer"
+  },
+  {
     "id": "dvd_card_connectedComponent_markoffGraph",
     "title": "Chen theorem for Markoff graphs",
     "test": false,
@@ -1036,6 +1047,17 @@
       "hippocrates_lunes"
     ],
     "generated_path": "generated/hippocrates_lunes"
+  },
+  {
+    "id": "honeycomb_connective_constant",
+    "title": "Connective constant of the honeycomb lattice",
+    "test": false,
+    "submitter": "Kim Morrison",
+    "module": "LeanEval.Combinatorics.HoneycombConnectiveConstant",
+    "holes": [
+      "honeycomb_connective_constant"
+    ],
+    "generated_path": "generated/honeycomb_connective_constant"
   },
   {
     "id": "hopf_rinow",
