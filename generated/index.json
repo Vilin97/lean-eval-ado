@@ -807,6 +807,17 @@
     "generated_path": "generated/fraser_kakeya_fourier_decay"
   },
   {
+    "id": "friedlander_iwaniec",
+    "title": "Friedlander\u2013Iwaniec theorem",
+    "test": false,
+    "submitter": "Bolton Bailey/Project Numina",
+    "module": "LeanEval.NumberTheory.FriedlanderIwaniec",
+    "holes": [
+      "friedlander_iwaniec"
+    ],
+    "generated_path": "generated/friedlander_iwaniec"
+  },
+  {
     "id": "frobenius_group_determinant",
     "title": "Frobenius determinant theorem",
     "test": false,
@@ -1387,6 +1398,17 @@
       "linear_ode_asymptotic_stability"
     ],
     "generated_path": "generated/linear_ode_asymptotic_stability"
+  },
+  {
+    "id": "linnik",
+    "title": "Linnik's theorem (L = 5.5)",
+    "test": false,
+    "submitter": "Bolton Bailey/Project Numina",
+    "module": "LeanEval.NumberTheory.Linnik",
+    "holes": [
+      "linnik"
+    ],
+    "generated_path": "generated/linnik"
   },
   {
     "id": "liouville_arnold",
@@ -2405,6 +2427,17 @@
       "tverberg_theorem"
     ],
     "generated_path": "generated/tverberg_theorem"
+  },
+  {
+    "id": "two_ninety_theorem",
+    "title": "The 290 theorem",
+    "test": false,
+    "submitter": "Bolton Bailey/Project Numina",
+    "module": "LeanEval.NumberTheory.TwoNinetyTheorem",
+    "holes": [
+      "two_ninety_theorem"
+    ],
+    "generated_path": "generated/two_ninety_theorem"
   },
   {
     "id": "two_plus_two",
