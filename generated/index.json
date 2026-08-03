@@ -286,6 +286,17 @@
     "generated_path": "generated/cauchy_kovalevskaya"
   },
   {
+    "id": "cdt_linearIndependent",
+    "title": "Linear independence results of Calegari\u2013Dimitrov\u2013Tang",
+    "test": false,
+    "submitter": "Junyan Xu",
+    "module": "LeanEval.NumberTheory.CalegariDimitrovTangLinearIndependent",
+    "holes": [
+      "cdt_linearIndependent"
+    ],
+    "generated_path": "generated/cdt_linearIndependent"
+  },
+  {
     "id": "cerf_gamma_four",
     "title": "Cerf's theorem: every self-diffeomorphism of S3 is smoothly isotopic to a linear isometry",
     "test": false,
@@ -2548,6 +2559,17 @@
       "weak_morse_inequality"
     ],
     "generated_path": "generated/weak_morse_inequality"
+  },
+  {
+    "id": "weil_conjectures",
+    "title": "Weil conjectures in terms of point counts",
+    "test": false,
+    "submitter": "Junyan Xu",
+    "module": "LeanEval.AlgebraicGeometry.WeilConjectures",
+    "holes": [
+      "weil_conjectures"
+    ],
+    "generated_path": "generated/weil_conjectures"
   },
   {
     "id": "weinstein_conjecture_dim3",
