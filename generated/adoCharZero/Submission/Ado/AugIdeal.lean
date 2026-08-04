@@ -74,4 +74,26 @@ theorem augPow_antitone {k l : ℕ} (h : k ≤ l) : augPow K L l ≤ augPow K L 
   refine iSup_le fun j => ?_
   exact genPow_le_augPow K L (by omega)
 
+@[simp]
+theorem augPow_zero : augPow K L 0 = ⊤ := by
+  rw [augPow_def]
+  simpa using iSup_gen_pow_eq_top K L
+
+@[simp]
+theorem filt_zero : filt K L 0 = ⊥ := by
+  rw [filt]
+  simp
+
+theorem filt_mono {k l : ℕ} (h : k ≤ l) : filt K L k ≤ filt K L l := by
+  rw [filt]
+  exact iSup_le fun j => genPow_le_filt K L (lt_of_lt_of_le j.isLt h)
+
+/-- Degree `< k` and degree `≥ k` meet only in `⊥` exactly when `L` injects
+into the truncation; recorded here as the statement that the two pieces do
+cover `U(L)`, which is all that finite-dimensionality needs. -/
+theorem mem_sup_filt_augPow (k : ℕ) (u : UniversalEnvelopingAlgebra K L) :
+    u ∈ filt K L k ⊔ augPow K L k := by
+  rw [sup_filt_augPow K L k]
+  trivial
+
 end Submission.Ado
