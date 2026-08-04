@@ -3,6 +3,8 @@ import Submission.Helpers
 import Submission.Ado.Basic
 import Submission.Ado.DerivRep
 import Submission.Ado.Easy
+import Submission.Ado.Embed
+import Submission.Ado.Closure
 
 open LeanEval.RepresentationTheory.AdoIwasawa
 

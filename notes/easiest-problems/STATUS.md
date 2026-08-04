@@ -26,8 +26,11 @@ single-session one. The same is true of the other 59 unsolved problems; see
 | `generated/adoCharZero/Submission/Ado/Basic.lean` | 105 | §0 reductions: `HasFaithfulFinRep`, direct sums of representations, `ad` kills exactly the centre, and the reduction of Ado to "faithful on the centre" | clean, no warnings |
 | `generated/adoCharZero/Submission/Ado/DerivRep.lean` | 146 | §4 engine: `IsDeriv`, `⁅D, mulLeft a⁆ = mulLeft (D a)`, `⁅mulLeft a, mulLeft b⁆ = mulLeft (a*b - b*a)`, the combined representation `x ↦ mulLeft (f x) + D x` with its exact Lie-morphism criterion, and its kernel criterion | clean, no warnings |
 | `generated/adoCharZero/Submission/Ado/Easy.lean` | 70 | **Ado's theorem proved in two complete special cases**: trivial centre (`ad` is faithful) and abelian (explicit `(dim L + 1)`-dimensional representation on `K × L`). Both hold over any field. | clean, no warnings |
+| `generated/adoCharZero/Submission/Ado/Embed.lean` | 86 | Ado's property for `L` **iff** `L` embeds into a finite-dimensional associative `K`-algebra with brackets going to ring commutators. This is the bridge both constructive halves cross at the end (§3 with `U(N)/J(N)^k`, §7 with `u(𝔤̂)`). | clean, no warnings |
+| `generated/adoCharZero/Submission/Ado/Closure.lean` | 63 | Ado's property is inherited along injective Lie morphisms (so passes to subalgebras — the §7 descent from the `p`-envelope) and is stable under products; plus **Ado for Lie algebras with trivial radical**, in particular semisimple ones. | clean, no warnings |
 
-All three files are mirrored into `generated/adoIwasawa/Submission/Ado/`.
+All five files are mirrored into `generated/adoIwasawa/Submission/Ado/`. Total
+468 lines.
 
 `#print axioms` on every proved declaration gives exactly
 `[propext, Classical.choice, Quot.sound]` — no `sorryAx`, so these results
