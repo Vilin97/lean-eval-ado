@@ -1,4 +1,4 @@
-import Mathlib
+import Submission.Ado.Weyl
 
 /-!
 # Levi's theorem: existence of a Levi subalgebra
@@ -6,7 +6,7 @@ import Mathlib
 For a finite-dimensional Lie algebra `L` over a field `K`, a *Levi subalgebra* is a Lie
 subalgebra of `L` which is a vector-space complement of the radical of `L`.  This file proves
 that a Levi subalgebra exists, **assuming Whitehead's first lemma** in the form of the
-predicate `Submission.Ado.WhiteheadH1` below (which is supplied externally).
+predicate `Submission.Ado.WhiteheadH1` below (which is proved in `Submission.Ado.Weyl`).
 
 ## Main results
 
@@ -36,16 +36,8 @@ namespace Submission.Ado
 
 open LieAlgebra Module
 
-/-- Whitehead's first lemma, supplied externally: for a finite-dimensional Lie algebra `S`
-over a field `K` with trivial radical and a finite-dimensional `S`-module `M`, every
-`1`-cocycle `c : S → M` is a coboundary. -/
-def WhiteheadH1 (K : Type u) [Field K] : Prop :=
-  ∀ (S : Type u) [LieRing S] [LieAlgebra K S] [FiniteDimensional K S]
-    [LieAlgebra.HasTrivialRadical K S]
-    (M : Type u) [AddCommGroup M] [Module K M] [LieRingModule S M] [LieModule K S M]
-    [FiniteDimensional K M]
-    (c : S →ₗ[K] M), (∀ x y : S, c ⁅x, y⁆ = ⁅x, c y⁆ - ⁅y, c x⁆) →
-      ∃ m : M, ∀ x : S, c x = ⁅x, m⁆
+/-! `WhiteheadH1` and its proof `whiteheadH1` now live in `Submission.Ado.Weyl`;
+the hypothesis below is therefore discharged unconditionally at the end of this file. -/
 
 section Infrastructure
 
@@ -775,5 +767,38 @@ theorem exists_levi_subalgebra_hasTrivialRadical (hW : WhiteheadH1 K) [CharZero 
 end Main
 
 
+
+end Submission.Ado
+
+
+namespace Submission.Ado
+
+section Unconditional
+
+variable {K L : Type u} [Field K] [LieRing L] [LieAlgebra K L]
+
+/-!
+## Unconditional forms
+
+`Submission.Ado.whiteheadH1` (proved in `Submission.Ado.Weyl` from the Casimir
+element and Weyl's complete reducibility theorem) discharges the hypothesis, so
+Levi's theorem holds outright in characteristic zero.
+-/
+
+/-- **Levi's theorem.** Every finite-dimensional Lie algebra over a field of
+characteristic zero has a Levi subalgebra: a Lie subalgebra which is a
+vector-space complement of the radical. -/
+theorem exists_levi_subalgebra' [CharZero K] [FiniteDimensional K L] :
+    ∃ S : LieSubalgebra K L, IsCompl S.toSubmodule (LieAlgebra.radical K L).toSubmodule :=
+  exists_levi_subalgebra (whiteheadH1 K)
+
+/-- **Levi's theorem, with semisimplicity of the Levi factor.** -/
+theorem exists_levi_subalgebra_hasTrivialRadical' [CharZero K] [FiniteDimensional K L] :
+    ∃ S : LieSubalgebra K L,
+      IsCompl S.toSubmodule (LieAlgebra.radical K L).toSubmodule ∧
+        LieAlgebra.HasTrivialRadical K S :=
+  exists_levi_subalgebra_hasTrivialRadical (whiteheadH1 K)
+
+end Unconditional
 
 end Submission.Ado
