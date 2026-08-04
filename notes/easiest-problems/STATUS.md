@@ -31,8 +31,14 @@ single-session one. The same is true of the other 59 unsolved problems; see
 
 | `generated/adoCharZero/Submission/Ado/Filtration.lean` | 129 | The degree filtration on `U(L)`: `ι '' L` generates `U(L)` as an algebra (`adjoin_range_ι_eq_top`, by the retraction argument through the universal property), `⨆ j, gen ^ j = ⊤`, and each `gen ^ j` is finite-dimensional. **This is the spanning half of PBW, and it does not need the basis theorem.** | clean, no warnings |
 
-All six files are mirrored into `generated/adoIwasawa/Submission/Ado/`. Total
-597 lines.
+| `generated/adoCharZero/Submission/Ado/Truncation.lean` | 82 | **`U(L) ⧸ J(L)^k` is finite-dimensional.** `filt k ⊔ augPow k = ⊤` splits `U(L)` into low degree and degree `≥ k`, and the quotient is the image of the finite-dimensional `filt k`. This is one of the two ingredients of Birkhoff's embedding theorem, and it needs no PBW basis theorem. | clean, no warnings |
+
+All seven files are mirrored into `generated/adoIwasawa/Submission/Ado/`. Total
+679 lines.
+
+Birkhoff's theorem (§3) is now down to a single missing input: `N ∩ J(N)^k = ⊥`
+for `k ≥ 2`, i.e. the *injectivity* half of PBW. Everything else it needs is
+proved.
 
 `#print axioms` on every proved declaration gives exactly
 `[propext, Classical.choice, Quot.sound]` — no `sorryAx`, so these results
