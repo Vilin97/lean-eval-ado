@@ -12,6 +12,7 @@ import Submission.Ado.EnvDeriv
 import Submission.Ado.DerivedRadical
 import Submission.Ado.PBW.Basis
 import Submission.Ado.Nilradical
+import Submission.Ado.Levi
 
 open LeanEval.RepresentationTheory.AdoIwasawa
 
