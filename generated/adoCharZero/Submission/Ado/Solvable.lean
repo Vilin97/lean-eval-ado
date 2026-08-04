@@ -1,0 +1,849 @@
+import Submission.Ado.EnvDeriv
+import Submission.Ado.Nilradical
+import Submission.Ado.DerivedRadical
+import Submission.Ado.PBW.Basis
+
+/-!
+# Ado's theorem for solvable Lie algebras in characteristic zero
+-/
+
+universe u v
+
+namespace Submission.Ado
+
+open UniversalEnvelopingAlgebra LieAlgebra LieModule Module
+
+attribute [local instance 100] LieRing.ofAssociativeRing
+
+/-! ### Two-sided ideals coming from `K`-submodules -/
+
+section TwoSided
+
+variable {K : Type u} [Field K] {A : Type v} [Ring A] [Algebra K A]
+
+/-- A `K`-submodule of a `K`-algebra which is a two-sided ideal for the ring structure. -/
+structure IsTwoSidedSub (P : Submodule K A) : Prop where
+  left : (⊤ : Submodule K A) * P ≤ P
+  right : P * (⊤ : Submodule K A) ≤ P
+
+theorem IsTwoSidedSub.mul_mem_left {P : Submodule K A} (h : IsTwoSidedSub P) (u : A) {p : A}
+    (hp : p ∈ P) : u * p ∈ P :=
+  h.left (Submodule.mul_mem_mul Submodule.mem_top hp)
+
+theorem IsTwoSidedSub.mul_mem_right {P : Submodule K A} (h : IsTwoSidedSub P) (u : A) {p : A}
+    (hp : p ∈ P) : p * u ∈ P :=
+  h.right (Submodule.mul_mem_mul hp Submodule.mem_top)
+
+theorem IsTwoSidedSub.sup {P Q : Submodule K A} (hP : IsTwoSidedSub P) (hQ : IsTwoSidedSub Q) :
+    IsTwoSidedSub (P ⊔ Q) where
+  left := by rw [Submodule.mul_sup]; exact sup_le_sup hP.left hQ.left
+  right := by rw [Submodule.sup_mul]; exact sup_le_sup hP.right hQ.right
+
+theorem IsTwoSidedSub.pow {P : Submodule K A} (hP : IsTwoSidedSub P) :
+    ∀ n : ℕ, IsTwoSidedSub (P ^ (n + 1))
+  | 0 => by simpa using hP
+  | n + 1 => by
+      refine ⟨?_, ?_⟩
+      · rw [pow_succ, ← mul_assoc]
+        exact mul_le_mul' (hP.pow n).left le_rfl
+      · rw [pow_succ, mul_assoc]
+        exact mul_le_mul' le_rfl hP.right
+
+theorem isTwoSidedSub_topMulTop (S : Submodule K A) :
+    IsTwoSidedSub ((⊤ : Submodule K A) * S * ⊤) := by
+  constructor
+  · rw [← mul_assoc, ← mul_assoc]
+    exact mul_le_mul' (mul_le_mul' le_top le_rfl) le_rfl
+  · rw [mul_assoc]
+    exact mul_le_mul' le_rfl le_top
+
+theorem le_topMulTop (S : Submodule K A) : S ≤ (⊤ : Submodule K A) * S * ⊤ := by
+  intro s hs
+  have h : (1 : A) * s * 1 ∈ (⊤ : Submodule K A) * S * ⊤ :=
+    Submodule.mul_mem_mul (Submodule.mul_mem_mul Submodule.mem_top hs) Submodule.mem_top
+  simpa using h
+
+theorem sup_mul_sup_le {Q X Y : Submodule K A} (hQ : IsTwoSidedSub Q) :
+    (Q ⊔ X) * (Q ⊔ Y) ≤ Q ⊔ X * Y := by
+  simp only [Submodule.sup_mul, Submodule.mul_sup, sup_le_iff]
+  refine ⟨⟨?_, ?_⟩, ?_, ?_⟩ <;> first
+    | exact le_sup_of_le_left (le_trans (mul_le_mul' le_rfl le_top) hQ.right)
+    | exact le_sup_of_le_left (le_trans (mul_le_mul' le_top le_rfl) hQ.left)
+    | exact le_sup_right
+
+theorem IsDeriv.smul {E : Module.End K A} (h : IsDeriv E) (c : K) : IsDeriv (c • E) := by
+  intro a b
+  simp only [LinearMap.smul_apply, h a b, smul_add, smul_mul_assoc, mul_smul_comm]
+
+/-- A two-sided `K`-submodule of a `K`-algebra, viewed as an `Ideal`. -/
+def toIdeal (P : Submodule K A) (h : IsTwoSidedSub P) : Ideal A where
+  carrier := (P : Set A)
+  zero_mem' := P.zero_mem
+  add_mem' := P.add_mem
+  smul_mem' c _ hx := h.mul_mem_left c hx
+
+@[simp]
+theorem mem_toIdeal {P : Submodule K A} {h : IsTwoSidedSub P} {x : A} :
+    x ∈ toIdeal P h ↔ x ∈ P := Iff.rfl
+
+instance isTwoSided_toIdeal (P : Submodule K A) (h : IsTwoSidedSub P) :
+    (toIdeal P h).IsTwoSided :=
+  ⟨fun b hab => h.mul_mem_right b hab⟩
+
+/-- A `K`-linear endomorphism preserving a two-sided ideal descends to the quotient ring. -/
+noncomputable def liftEndQuot {P : Submodule K A} (hP : IsTwoSidedSub P) (E : Module.End K A)
+    (hE : ∀ u ∈ P, E u ∈ P) : Module.End K (A ⧸ toIdeal P hP) where
+  toFun w := Quotient.liftOn' w
+      (fun u => (Submodule.Quotient.mk (E u) : A ⧸ toIdeal P hP))
+      (fun a b hab => by
+        refine (Submodule.Quotient.eq _).mpr ?_
+        rw [← map_sub]
+        exact hE _ ((Submodule.quotientRel_def _).mp hab))
+  map_add' := by
+    rintro ⟨a⟩ ⟨b⟩
+    show (Submodule.Quotient.mk (E (a + b)) : A ⧸ toIdeal P hP) = _
+    rw [map_add]
+    rfl
+  map_smul' := by
+    rintro c ⟨a⟩
+    show (Submodule.Quotient.mk (E (c • a)) : A ⧸ toIdeal P hP) = _
+    rw [map_smul]
+    rfl
+
+@[simp]
+theorem liftEndQuot_mk {P : Submodule K A} (hP : IsTwoSidedSub P) (E : Module.End K A)
+    (hE : ∀ u ∈ P, E u ∈ P) (u : A) :
+    liftEndQuot hP E hE (Submodule.Quotient.mk u : A ⧸ toIdeal P hP)
+      = Submodule.Quotient.mk (E u) := rfl
+
+theorem isDeriv_liftEndQuot {P : Submodule K A} (hP : IsTwoSidedSub P) {E : Module.End K A}
+    (hE : ∀ u ∈ P, E u ∈ P) (hderiv : IsDeriv E) : IsDeriv (liftEndQuot hP E hE) := by
+  rintro ⟨a⟩ ⟨b⟩
+  show (Submodule.Quotient.mk (E (a * b)) : A ⧸ toIdeal P hP) = _
+  rw [hderiv a b]
+  rfl
+
+end TwoSided
+
+/-! ### Powers of a finitely generated two-sided ideal have finite codimension -/
+
+section FiniteCodim
+
+variable {K : Type u} [Field K] {A : Type v} [Ring A] [Algebra K A]
+
+/-- If `T` is the two-sided ideal generated by a submodule `S` and `⊤ = C ⊔ T`, then modulo `T ^ 2`
+the ideal `T` is spanned by the (finitely generated) piece `C * S * C`. -/
+theorem le_mul_sup_sq {C S T : Submodule K A} (hT2 : IsTwoSidedSub T) (hST : S ≤ T)
+    (hT : T = ⊤ * S * ⊤) (htop : (⊤ : Submodule K A) = C ⊔ T) :
+    T ≤ C * S * C ⊔ T ^ 2 := by
+  have hsq : IsTwoSidedSub (T ^ 2) := by simpa using hT2.pow 1
+  have h1 : C * S * T ≤ T ^ 2 := by
+    refine le_trans (mul_le_mul' (mul_le_mul' (le_top (a := C)) hST) le_rfl) ?_
+    rw [pow_two]
+    exact mul_le_mul' hT2.left le_rfl
+  have h2 : T * S * C ≤ T ^ 2 := by
+    refine le_trans (mul_le_mul' (mul_le_mul' (le_refl T) hST) (le_top (a := C))) ?_
+    rw [← pow_two]
+    exact hsq.right
+  have h3 : T * S * T ≤ T ^ 2 := by
+    refine le_trans (mul_le_mul' (mul_le_mul' (le_refl T) hST) (le_top (a := T))) ?_
+    rw [← pow_two]
+    exact hsq.right
+  have key : (C ⊔ T) * S * (C ⊔ T) ≤ C * S * C ⊔ T ^ 2 := by
+    simp only [Submodule.sup_mul, Submodule.mul_sup, sup_le_iff]
+    refine ⟨⟨le_sup_left, ?_⟩, ?_, ?_⟩ <;>
+      exact le_sup_of_le_right (by first | exact h1 | exact h2 | exact h3)
+  calc T = (C ⊔ T) * S * (C ⊔ T) := by rw [← htop, ← hT]
+    _ ≤ C * S * C ⊔ T ^ 2 := key
+
+/-- Every power of a two-sided ideal generated by a finitely generated submodule, and admitting a
+finitely generated complement, again admits a finitely generated complement. -/
+theorem exists_fg_sup_pow {C S T : Submodule K A} (hC : C.FG) (hS : S.FG)
+    (hT2 : IsTwoSidedSub T) (hST : S ≤ T) (hT : T = ⊤ * S * ⊤)
+    (htop : (⊤ : Submodule K A) = C ⊔ T) (r : ℕ) :
+    ∃ E : Submodule K A, E.FG ∧ (⊤ : Submodule K A) = E ⊔ T ^ (r + 1) := by
+  set D : Submodule K A := C * S * C with hD
+  have hDT : D ≤ T := by
+    rw [hD, hT]
+    exact mul_le_mul' (mul_le_mul' le_top le_rfl) le_top
+  have hDfg : D.FG := (hC.mul hS).mul hC
+  have hanti : ∀ n : ℕ, T ^ (n + 2) ≤ T ^ (n + 1) := by
+    intro n
+    rw [pow_succ]
+    exact le_trans (mul_le_mul' le_rfl (le_top (a := T))) (hT2.pow n).right
+  have hstep : T ≤ D ⊔ T ^ 2 := le_mul_sup_sq hT2 hST hT htop
+  have hpow : ∀ j : ℕ, T ^ (j + 1) ≤ D ^ (j + 1) ⊔ T ^ (j + 2) := by
+    intro j
+    induction j with
+    | zero => simpa using hstep
+    | succ j ih =>
+      have hmul : T ^ (j + 2) ≤ (D ^ (j + 1) ⊔ T ^ (j + 2)) * (D ⊔ T ^ 2) := by
+        rw [pow_succ]
+        exact mul_le_mul' ih hstep
+      have e1 : D ^ (j + 1) * D ≤ D ^ (j + 2) ⊔ T ^ (j + 3) :=
+        le_sup_of_le_left (le_of_eq (pow_succ D (j + 1)).symm)
+      have e2 : T ^ (j + 2) * D ≤ D ^ (j + 2) ⊔ T ^ (j + 3) := by
+        refine le_sup_of_le_right ?_
+        refine le_trans (mul_le_mul' le_rfl hDT) (le_of_eq ?_)
+        rw [← pow_succ]
+      have e3 : D ^ (j + 1) * T ^ 2 ≤ D ^ (j + 2) ⊔ T ^ (j + 3) := by
+        refine le_sup_of_le_right ?_
+        refine le_trans (mul_le_mul' (pow_le_pow_left' hDT (j + 1)) le_rfl) (le_of_eq ?_)
+        rw [← pow_add]
+      have e4 : T ^ (j + 2) * T ^ 2 ≤ D ^ (j + 2) ⊔ T ^ (j + 3) := by
+        refine le_sup_of_le_right ?_
+        rw [← pow_add]
+        exact hanti (j + 2)
+      refine le_trans hmul ?_
+      simp only [Submodule.sup_mul, Submodule.mul_sup, sup_le_iff]
+      refine ⟨⟨?_, ?_⟩, ?_, ?_⟩ <;>
+        exact (by first | exact e1 | exact e2 | exact e3 | exact e4)
+  induction r with
+  | zero => exact ⟨C, hC, by simpa using htop⟩
+  | succ r ih =>
+    obtain ⟨E, hE, hEtop⟩ := ih
+    refine ⟨E ⊔ D ^ (r + 1), hE.sup (hDfg.pow _), le_antisymm ?_ le_top⟩
+    calc (⊤ : Submodule K A) = E ⊔ T ^ (r + 1) := hEtop
+      _ ≤ E ⊔ (D ^ (r + 1) ⊔ T ^ (r + 2)) := sup_le_sup_left (hpow r) E
+      _ = E ⊔ D ^ (r + 1) ⊔ T ^ (r + 1 + 1) := by rw [sup_assoc]
+
+/-- The quotient of `A` by a two-sided ideal admitting a finitely generated complement is
+finite-dimensional. -/
+theorem finiteDimensional_quotient_toIdeal {P : Submodule K A} (h : IsTwoSidedSub P)
+    {E : Submodule K A} (hE : E.FG) (htop : (⊤ : Submodule K A) = E ⊔ P) :
+    FiniteDimensional K (A ⧸ toIdeal P h) := by
+  haveI : FiniteDimensional K ↥E := Module.Finite.iff_fg.mpr hE
+  have hsurj : Function.Surjective
+      (((Ideal.Quotient.mkₐ K (toIdeal P h)).toLinearMap).comp E.subtype) := by
+    intro y
+    obtain ⟨u, rfl⟩ := Ideal.Quotient.mk_surjective (I := toIdeal P h) y
+    have hu : u ∈ E ⊔ P := by rw [← htop]; trivial
+    obtain ⟨e, he, p, hp, rfl⟩ := Submodule.mem_sup.mp hu
+    refine ⟨⟨e, he⟩, ?_⟩
+    show Ideal.Quotient.mk _ e = Ideal.Quotient.mk _ (e + p)
+    rw [eq_comm, Ideal.Quotient.mk_eq_mk_iff_sub_mem]
+    simpa using hp
+  exact Module.Finite.of_surjective _ hsurj
+
+end FiniteCodim
+
+/-! ### A finite-codimension ideal of `U(L)` is finitely generated -/
+
+section Complement
+
+variable (K L : Type u) [Field K] [LieRing L] [LieAlgebra K L] [FiniteDimensional K L]
+
+/-- A two-sided ideal `Q` of `U(L)` of finite codimension contains a finitely generated
+submodule `S` whose two-sided span already has a finitely generated complement.  (In fact the
+two-sided span is `Q` itself, but that is not needed.) -/
+theorem exists_fg_generating {Q : Submodule K (UniversalEnvelopingAlgebra K L)}
+    (hfd : FiniteDimensional K (UniversalEnvelopingAlgebra K L ⧸ Q)) :
+    ∃ C S : Submodule K (UniversalEnvelopingAlgebra K L),
+      C.FG ∧ S.FG ∧ S ≤ Q ∧
+        (⊤ : Submodule K (UniversalEnvelopingAlgebra K L)) = C ⊔ (⊤ * S * ⊤) := by
+  classical
+  set U := UniversalEnvelopingAlgebra K L
+  haveI := hfd
+  have hmono : Monotone fun j : ℕ => Submodule.map Q.mkQ (filt K L j) := by
+    intro i j hij
+    exact Submodule.map_mono (filt_mono K L hij)
+  obtain ⟨n, hn⟩ := (monotone_stabilizes_iff_noetherian (R := K) (M := U ⧸ Q)).mpr inferInstance
+    ⟨_, hmono⟩
+  set k := n + 1 with hk
+  have hstab : Submodule.map Q.mkQ (filt K L k) = Submodule.map Q.mkQ (filt K L (k + 1)) := by
+    have h1 := hn k (by omega)
+    have h2 := hn (k + 1) (by omega)
+    exact h1.symm.trans h2
+  set S : Submodule K U := Q ⊓ filt K L (k + 1) with hS
+  have hSQ : S ≤ Q := inf_le_left
+  have hSfg : S.FG := by
+    haveI : FiniteDimensional K ↥S := Submodule.finiteDimensional_of_le inf_le_right
+    exact Module.Finite.iff_fg.mp inferInstance
+  refine ⟨filt K L k, S, filt_fg K L k, hSfg, hSQ, le_antisymm ?_ le_top⟩
+  set T : Submodule K U := ⊤ * S * ⊤ with hT
+  have hSle : S ≤ T := by
+    intro s hs
+    have : (1 : U) * s * 1 ∈ T :=
+      Submodule.mul_mem_mul
+        (Submodule.mul_mem_mul Submodule.mem_top hs) Submodule.mem_top
+    simpa using this
+  have hTl : (⊤ : Submodule K U) * T ≤ T := by
+    rw [hT, ← mul_assoc, ← mul_assoc]
+    exact mul_le_mul' (mul_le_mul' le_top le_rfl) le_rfl
+  have hfiltstep : filt K L (k + 1) ≤ filt K L k ⊔ S := by
+    intro u hu
+    have h1 : Q.mkQ u ∈ Submodule.map Q.mkQ (filt K L (k + 1)) := ⟨u, hu, rfl⟩
+    rw [← hstab] at h1
+    obtain ⟨c, hc, hcu⟩ := h1
+    have h2 : u - c ∈ Q :=
+      (Submodule.Quotient.eq Q).mp (hcu.symm : (Submodule.Quotient.mk u : U ⧸ Q) = _)
+    have h3 : u - c ∈ S :=
+      ⟨h2, Submodule.sub_mem _ hu (filt_mono K L (Nat.le_succ k) hc)⟩
+    have hsplit : u = c + (u - c) := by abel
+    rw [hsplit]
+    exact Submodule.add_mem _ (Submodule.mem_sup_left hc) (Submodule.mem_sup_right h3)
+  have hgen : gen K L * (filt K L k ⊔ T) ≤ filt K L k ⊔ T := by
+    rw [Submodule.mul_sup]
+    refine sup_le ?_ (le_sup_of_le_right (le_trans (mul_le_mul' le_top le_rfl) hTl))
+    refine le_trans ?_ (le_trans hfiltstep (sup_le_sup_left hSle _))
+    rw [filt, Submodule.mul_iSup]
+    refine iSup_le fun j => ?_
+    rw [← pow_succ']
+    exact genPow_le_filt K L (by omega)
+  have hpow : ∀ j : ℕ, gen K L ^ j ≤ filt K L k ⊔ T := by
+    intro j
+    induction j with
+    | zero => exact le_sup_of_le_left (genPow_le_filt K L (by omega))
+    | succ j ih =>
+      rw [pow_succ']
+      exact le_trans (mul_le_mul' le_rfl ih) hgen
+  rw [← iSup_gen_pow_eq_top K L]
+  exact iSup_le hpow
+
+end Complement
+
+/-! ### Engel: the ideal generated by the nilradical acts nilpotently -/
+
+section Engel
+
+variable {K 𝔞 V : Type u} [Field K] [LieRing 𝔞] [LieAlgebra K 𝔞] [FiniteDimensional K 𝔞]
+  [AddCommGroup V] [Module K V] [FiniteDimensional K V]
+
+/-- The Lie module structure on `V` determined by a representation `ρ`. -/
+@[reducible]
+def repRingModule (ρ : 𝔞 →ₗ⁅K⁆ Module.End K V) : LieRingModule 𝔞 V where
+  bracket x v := ρ x v
+  add_lie x y v := by simp
+  lie_add x v w := by simp
+  leibniz_lie x y v := by
+    show ρ x (ρ y v) = ρ ⁅x, y⁆ v + ρ y (ρ x v)
+    rw [LieHom.map_lie, LieRing.of_associative_ring_bracket]
+    simp
+
+omit [FiniteDimensional K 𝔞] in
+/-- **Engel.** If `ρ` is nilpotent on the nilradical of `𝔞`, then some power of the two-sided
+ideal generated by the nilradical inside `U(𝔞)` is killed by `ρ`. -/
+theorem exists_pow_genIdeal_le_ker (ρ : 𝔞 →ₗ⁅K⁆ Module.End K V)
+    (hnil : ∀ x ∈ nilRadical K 𝔞, IsNilpotent (ρ x)) :
+    ∃ m : ℕ, 1 ≤ m ∧
+      genIdeal (LieSubmodule.toSubmodule (nilRadical K 𝔞)) ^ m ≤
+        LinearMap.ker ((lift K ρ : UniversalEnvelopingAlgebra K 𝔞 →ₐ[K] Module.End K V) :
+          UniversalEnvelopingAlgebra K 𝔞 →ₗ[K] Module.End K V) := by
+  letI : LieRingModule 𝔞 V := repRingModule ρ
+  haveI : LieModule K 𝔞 V :=
+    { smul_lie := fun t x v => by
+        show ρ (t • x) v = t • ρ x v
+        rw [map_smul, LinearMap.smul_apply]
+      lie_smul := fun t x v => by
+        show ρ x (t • v) = t • ρ x v
+        rw [map_smul] }
+  set U := UniversalEnvelopingAlgebra K 𝔞
+  set π : U →ₐ[K] Module.End K V := lift K ρ with hπ
+  set N : LieIdeal K 𝔞 := nilRadical K 𝔞 with hN
+  set J : Submodule K U := genIdeal (LieSubmodule.toSubmodule N) with hJ
+  -- `V` is a nilpotent `N`-module
+  have hbracket : ∀ (x : 𝔞) (v : V), ⁅x, v⁆ = ρ x v := fun _ _ => rfl
+  have htoEnd : ∀ x : ↥N, LieModule.toEnd K ↥N V x = ρ (x : 𝔞) := fun x => by
+    ext v; rfl
+  haveI : LieModule.IsNilpotent ↥N V := by
+    rw [LieModule.isNilpotent_iff_forall' (R := K)]
+    intro x
+    rw [htoEnd x]
+    exact hnil _ x.2
+  obtain ⟨m₀, hm₀⟩ := (LieModule.isNilpotent_iff K ↥N V).mp inferInstance
+  have hbot : LieSubmodule.toSubmodule (N.lcs V m₀) = (⊥ : Submodule K V) := by
+    rw [N.coe_lcs_eq, hm₀]; rfl
+  -- every `𝔞`-submodule is stable under the image of `U(𝔞)`
+  have hstable : ∀ (Z : LieSubmodule K 𝔞 V) (u : U), ∀ v ∈ Z, π u v ∈ Z := by
+    intro Z u
+    have hu : u ∈ Algebra.adjoin K (Set.range (ι K : 𝔞 → U)) := by
+      rw [adjoin_range_ι_eq_top K 𝔞]; trivial
+    induction hu using Algebra.adjoin_induction with
+    | mem x hx =>
+        obtain ⟨y, rfl⟩ := hx
+        intro v hv
+        rw [hπ, lift_ι_apply]
+        exact Z.lie_mem hv
+    | algebraMap r =>
+        intro v hv
+        rw [AlgHom.commutes]
+        simpa [Algebra.algebraMap_eq_smul_one] using Z.smul_mem r hv
+    | add a b _ _ ha hb =>
+        intro v hv
+        rw [map_add, LinearMap.add_apply]
+        exact Z.add_mem (ha v hv) (hb v hv)
+    | mul a b _ _ ha hb =>
+        intro v hv
+        rw [map_mul, Module.End.mul_apply]
+        exact ha _ (hb v hv)
+  -- one step: the ideal generated by `N` moves the filtration one place down
+  have hinner : ∀ (i : ℕ) (x : U),
+      x ∈ (⊤ : Submodule K U) *
+        Submodule.map ((ι K : 𝔞 →ₗ⁅K⁆ U) : 𝔞 →ₗ[K] U) (LieSubmodule.toSubmodule N) →
+      ∀ w ∈ N.lcs V i, π x w ∈ N.lcs V (i + 1) := by
+    intro i x hx
+    refine Submodule.mul_induction_on hx ?_ ?_
+    · rintro p - q ⟨n, hn, rfl⟩ w hw
+      rw [map_mul, Module.End.mul_apply]
+      refine hstable _ p _ ?_
+      rw [N.lcs_succ]
+      have hval : π (((ι K : 𝔞 →ₗ⁅K⁆ UniversalEnvelopingAlgebra K 𝔞) : 𝔞 →ₗ[K] _) n) w
+          = ⁅n, w⁆ := by
+        have hkey : π (ι K n) = ρ n := by rw [hπ]; exact lift_ι_apply K ρ n
+        simp only [LieHom.coe_toLinearMap]
+        rw [hkey]
+        rfl
+      rw [hval]
+      exact LieSubmodule.lie_coe_mem_lie (⟨n, hn⟩ : ↥N) (⟨w, hw⟩ : ↥(N.lcs V i))
+    · intro a b ha hb w hw
+      rw [map_add, LinearMap.add_apply]
+      exact (N.lcs V (i + 1)).add_mem (ha w hw) (hb w hw)
+  have hJstep : ∀ (i : ℕ) (b : U), b ∈ J → ∀ v ∈ N.lcs V i, π b v ∈ N.lcs V (i + 1) := by
+    intro i b hb
+    rw [hJ, genIdeal] at hb
+    refine Submodule.mul_induction_on hb ?_ ?_
+    · rintro x hx y - v hv
+      rw [map_mul, Module.End.mul_apply]
+      exact hinner i x hx _ (hstable _ y v hv)
+    · intro x y hx hy v hv
+      rw [map_add, LinearMap.add_apply]
+      exact (N.lcs V (i + 1)).add_mem (hx v hv) (hy v hv)
+  have hJpow : ∀ (j i : ℕ) (u : U), u ∈ J ^ j → ∀ v ∈ N.lcs V i, π u v ∈ N.lcs V (i + j) := by
+    intro j
+    induction j with
+    | zero =>
+      intro i u hu v hv
+      rw [pow_zero] at hu
+      obtain ⟨r, rfl⟩ := Submodule.mem_one.mp hu
+      rw [AlgHom.commutes]
+      simpa [Algebra.algebraMap_eq_smul_one] using (N.lcs V i).smul_mem r hv
+    | succ j ih =>
+      intro i u hu v hv
+      rw [pow_succ] at hu
+      refine Submodule.mul_induction_on hu ?_ ?_
+      · intro a ha b hb
+        rw [map_mul, Module.End.mul_apply]
+        have h1 : π b v ∈ N.lcs V (i + 1) := hJstep i b hb v hv
+        have h2 := ih (i + 1) a ha _ h1
+        rwa [show i + 1 + j = i + (j + 1) by omega] at h2
+      · intro a b ha hb
+        rw [map_add, LinearMap.add_apply]
+        exact (N.lcs V (i + (j + 1))).add_mem ha hb
+  refine ⟨m₀ + 1, by omega, ?_⟩
+  intro u hu
+  rw [LinearMap.mem_ker]
+  ext v
+  have hv0 : v ∈ N.lcs V 0 := by rw [N.lcs_zero]; trivial
+  have hmem := hJpow (m₀ + 1) 0 u hu v hv0
+  rw [show 0 + (m₀ + 1) = m₀ + 1 by omega, N.lcs_succ] at hmem
+  have hle : ⁅N, N.lcs V m₀⁆ ≤ N.lcs V m₀ := LieSubmodule.lie_le_right _ _
+  have : (π u) v ∈ LieSubmodule.toSubmodule (N.lcs V m₀) := hle hmem
+  rw [hbot] at this
+  simpa using this
+
+/-- **The ideal used in the extension step.** Given a faithful finite-dimensional representation
+of `𝔞` which is nilpotent on the nilradical, there is a two-sided ideal `I` of `U(𝔞)` containing
+the ideal generated by the nilradical, such that `U(𝔞) ⧸ I ^ m` is finite-dimensional and `𝔞`
+still injects into it. -/
+theorem exists_good_ideal (ρ : 𝔞 →ₗ⁅K⁆ Module.End K V) (hinj : Function.Injective ρ)
+    (hnil : ∀ x ∈ nilRadical K 𝔞, IsNilpotent (ρ x)) :
+    ∃ (I : Submodule K (UniversalEnvelopingAlgebra K 𝔞)) (m : ℕ),
+      IsTwoSidedSub I ∧ 1 ≤ m ∧
+      genIdeal (LieSubmodule.toSubmodule (nilRadical K 𝔞)) ≤ I ∧
+      (∀ x : 𝔞, (ι K x : UniversalEnvelopingAlgebra K 𝔞) ∈ I ^ m → x = 0) ∧
+      ∃ E : Submodule K (UniversalEnvelopingAlgebra K 𝔞), E.FG ∧
+        (⊤ : Submodule K (UniversalEnvelopingAlgebra K 𝔞)) = E ⊔ I ^ m := by
+  set π : UniversalEnvelopingAlgebra K 𝔞 →ₐ[K] Module.End K V := lift K ρ with hπ
+  set Q : Submodule K (UniversalEnvelopingAlgebra K 𝔞) :=
+    LinearMap.ker (π : UniversalEnvelopingAlgebra K 𝔞 →ₗ[K] Module.End K V) with hQdef
+  have hmemQ : ∀ u, u ∈ Q ↔ π u = 0 := fun u => LinearMap.mem_ker
+  have hQ : IsTwoSidedSub Q := by
+    constructor
+    · refine Submodule.mul_le.mpr fun u _ q hq => ?_
+      rw [hmemQ] at hq ⊢
+      rw [map_mul, hq, mul_zero]
+    · refine Submodule.mul_le.mpr fun q hq u _ => ?_
+      rw [hmemQ] at hq ⊢
+      rw [map_mul, hq, zero_mul]
+  haveI : FiniteDimensional K (UniversalEnvelopingAlgebra K 𝔞 ⧸ Q) :=
+    (LinearMap.quotKerEquivRange
+      (π : UniversalEnvelopingAlgebra K 𝔞 →ₗ[K] Module.End K V)).symm.finiteDimensional
+  set J : Submodule K (UniversalEnvelopingAlgebra K 𝔞) :=
+    genIdeal (LieSubmodule.toSubmodule (nilRadical K 𝔞)) with hJdef
+  have hJ : IsTwoSidedSub J :=
+    ⟨top_mul_genIdeal_le _, genIdeal_mul_top_le _⟩
+  obtain ⟨m, hm1, hmle⟩ := exists_pow_genIdeal_le_ker ρ hnil
+  refine ⟨Q ⊔ J, m, hQ.sup hJ, hm1, le_sup_right, ?_, ?_⟩
+  · -- faithfulness
+    have hsup : ∀ j : ℕ, (Q ⊔ J) ^ (j + 1) ≤ Q ⊔ J ^ (j + 1) := by
+      intro j
+      induction j with
+      | zero => simp
+      | succ j ih =>
+        rw [pow_succ]
+        refine le_trans (mul_le_mul' ih le_rfl) ?_
+        refine le_trans (sup_mul_sup_le hQ) ?_
+        rw [← pow_succ]
+    have hIQ : (Q ⊔ J) ^ m ≤ Q := by
+      obtain ⟨j, rfl⟩ : ∃ j, m = j + 1 := ⟨m - 1, by omega⟩
+      exact le_trans (hsup j) (sup_le le_rfl (le_trans hmle le_rfl))
+    intro x hx
+    have h0 : π (ι K x) = 0 := (hmemQ _).mp (hIQ hx)
+    rw [hπ, lift_ι_apply] at h0
+    have := hinj (by rw [h0, map_zero] : ρ x = ρ 0)
+    exact this
+  · -- finite codimension
+    obtain ⟨C, S, hC, hS, hSQ, htop⟩ :=
+      exists_fg_generating (K := K) (L := 𝔞) (Q := Q) inferInstance
+    obtain ⟨j, rfl⟩ : ∃ j, m = j + 1 := ⟨m - 1, by omega⟩
+    obtain ⟨E, hE, hEtop⟩ :=
+      exists_fg_sup_pow hC hS (isTwoSidedSub_topMulTop S) (le_topMulTop S) rfl htop j
+    refine ⟨E, hE, le_antisymm ?_ le_top⟩
+    refine le_trans (le_of_eq hEtop) (sup_le_sup_left ?_ E)
+    refine pow_le_pow_left' ?_ (j + 1)
+    exact le_trans (mul_le_mul' (mul_le_mul' le_top hSQ) le_top)
+      (le_trans (mul_le_mul' hQ.left le_rfl) (le_trans hQ.right le_sup_left))
+
+end Engel
+
+/-! ### The one-dimensional extension step -/
+
+section Extension
+
+variable {K L : Type u} [Field K] [LieRing L] [LieAlgebra K L] [FiniteDimensional K L]
+
+/-- **§4/§5.** Let `A` be a codimension-one ideal of `L` containing `⁅L, L⁆` and the nilradical.
+A faithful finite-dimensional representation of `A` which is nilpotent on the nilradical of `A`
+extends to such a representation of `L`. -/
+theorem extension_step (A : LieIdeal K L) (H : L) (ψ : L →ₗ[K] K)
+    (hψA : ∀ x : L, x ∈ A ↔ ψ x = 0) (hψH : ψ H = 1)
+    (hNA : nilRadical K L ≤ A) (hLL : ∀ x y : L, ⁅x, y⁆ ∈ nilRadical K L)
+    {V₀ : Type u} [AddCommGroup V₀] [Module K V₀] [FiniteDimensional K V₀]
+    (ρ₀ : ↥A →ₗ⁅K⁆ Module.End K V₀) (hinj : Function.Injective ρ₀)
+    (hnil0 : ∀ x ∈ nilRadical K ↥A, IsNilpotent (ρ₀ x)) :
+    ∃ (W : Type u) (_ : AddCommGroup W) (_ : Module K W) (_ : FiniteDimensional K W)
+      (ρ : L →ₗ⁅K⁆ Module.End K W),
+      Function.Injective ρ ∧ ∀ x ∈ nilRadical K L, IsNilpotent (ρ x) := by
+  classical
+  -- (1) the nilradical of `L`, seen inside `A`, is contained in the nilradical of `A`
+  have hnilincl : ∀ z : ↥A, (z : L) ∈ nilRadical K L → z ∈ nilRadical K ↥A := by
+    intro z hz
+    set N₁ : LieIdeal K ↥A := LieIdeal.comap A.incl (nilRadical K L) with hN₁
+    let g : ↥N₁ →ₗ⁅K⁆ ↥(nilRadical K L) :=
+      { toFun := fun w => ⟨((w : ↥A) : L), w.2⟩
+        map_add' := fun _ _ => rfl
+        map_smul' := fun _ _ => rfl
+        map_lie' := rfl }
+    have hginj : Function.Injective g := by
+      intro a b hab
+      have h1 := congrArg (fun w : ↥(nilRadical K L) => (w : L)) hab
+      exact Subtype.ext (Subtype.ext h1)
+    haveI : LieRing.IsNilpotent ↥N₁ := hginj.lieAlgebra_isNilpotent
+    exact le_nilRadical (I := N₁) (show z ∈ N₁ from hz)
+  -- (2) the derivation `ad H` of `A`
+  have hHA : ∀ x : ↥A, ⁅H, (x : L)⁆ ∈ A := fun x => hNA (hLL H x)
+  let D : ↥A →ₗ[K] ↥A :=
+    { toFun := fun x => ⟨⁅H, (x : L)⁆, hHA x⟩
+      map_add' := fun a b => by ext; simp
+      map_smul' := fun t a => by ext; simp }
+  have hDval : ∀ x : ↥A, ((D x : ↥A) : L) = ⁅H, (x : L)⁆ := fun _ => rfl
+  have hD : ∀ x y : ↥A, D ⁅x, y⁆ = ⁅D x, y⁆ + ⁅x, D y⁆ := by
+    intro x y
+    apply Subtype.ext
+    show ⁅H, ⁅(x : L), (y : L)⁆⁆ = _
+    rw [leibniz_lie H (x : L) (y : L)]
+    rfl
+  have hDN : ∀ x : ↥A, D x ∈ LieSubmodule.toSubmodule (nilRadical K ↥A) := fun x =>
+    hnilincl _ (hLL H (x : L))
+  have hΔJ : ∀ u : UniversalEnvelopingAlgebra K ↥A,
+      envDeriv D hD u ∈ genIdeal (LieSubmodule.toSubmodule (nilRadical K ↥A)) :=
+    envDeriv_mem_genIdeal D hD hDN
+  -- (3) the ideal supplied by the induction hypothesis
+  obtain ⟨I, m, hI, hm1, hJI, hfaith, E, hE, hEtop⟩ := exists_good_ideal ρ₀ hinj hnil0
+  obtain ⟨m', rfl⟩ : ∃ m', m = m' + 1 := ⟨m - 1, by omega⟩
+  have hP : IsTwoSidedSub (I ^ (m' + 1)) := hI.pow m'
+  have hΔP : ∀ r : ℕ, ∀ u ∈ I ^ r, envDeriv D hD u ∈ I ^ r := by
+    intro r
+    induction r with
+    | zero =>
+      intro u hu
+      rw [pow_zero] at hu ⊢
+      obtain ⟨c, rfl⟩ := Submodule.mem_one.mp hu
+      rw [Algebra.algebraMap_eq_smul_one, map_smul, envDeriv_one, smul_zero]
+      exact Submodule.zero_mem _
+    | succ r ih =>
+      intro u hu
+      rw [pow_succ] at hu ⊢
+      refine Submodule.mul_induction_on hu ?_ ?_
+      · intro a ha b hb
+        rw [envDeriv_isDeriv D hD a b]
+        exact Submodule.add_mem _ (Submodule.mul_mem_mul (ih a ha) hb)
+          (Submodule.mul_mem_mul ha (hJI (hΔJ b)))
+      · intro a b ha hb
+        rw [map_add]
+        exact Submodule.add_mem _ ha hb
+  -- (4) the finite-dimensional algebra `W`
+  haveI : FiniteDimensional K (UniversalEnvelopingAlgebra K ↥A ⧸ toIdeal (I ^ (m' + 1)) hP) :=
+    finiteDimensional_quotient_toIdeal hP hE hEtop
+  set W := UniversalEnvelopingAlgebra K ↥A ⧸ toIdeal (I ^ (m' + 1)) hP with hWdef
+  set Dbar : Module.End K W := liftEndQuot hP (envDeriv D hD) (hΔP (m' + 1)) with hDbar
+  set q : UniversalEnvelopingAlgebra K ↥A →ₐ[K] W :=
+    Ideal.Quotient.mkₐ K (toIdeal (I ^ (m' + 1)) hP) with hq
+  have hqzero : ∀ u, q u = 0 ↔ u ∈ I ^ (m' + 1) := by
+    intro u
+    rw [hq]
+    exact Ideal.Quotient.eq_zero_iff_mem
+  -- (5) the linear projection `L → A`
+  have hprojmem : ∀ x : L, x - ψ x • H ∈ A := by
+    intro x
+    rw [hψA]
+    simp [hψH]
+  let proj : L →ₗ[K] ↥A :=
+    { toFun := fun x => ⟨x - ψ x • H, hprojmem x⟩
+      map_add' := fun a b => by
+        apply Subtype.ext
+        show a + b - ψ (a + b) • H = (a - ψ a • H) + (b - ψ b • H)
+        rw [map_add, add_smul]; abel
+      map_smul' := fun t a => by
+        apply Subtype.ext
+        show t • a - ψ (t • a) • H = t • (a - ψ a • H)
+        rw [map_smul, smul_sub, smul_smul]
+        rfl }
+  have hprojval : ∀ x : L, ((proj x : ↥A) : L) = x - ψ x • H := fun _ => rfl
+  set f : L →ₗ[K] W :=
+    (q.toLinearMap).comp
+      (((ι K : ↥A →ₗ⁅K⁆ UniversalEnvelopingAlgebra K ↥A) : ↥A →ₗ[K] _).comp proj) with hf
+  have hfval : ∀ x : L, f x = q (ι K (proj x)) := fun _ => rfl
+  set Drep : L →ₗ[K] Module.End K W := LinearMap.smulRight ψ Dbar with hDrep
+  have hDrepval : ∀ x : L, Drep x = ψ x • Dbar := fun _ => rfl
+  -- (6) the hypotheses of `lieHomOfMulLeftAddDeriv`
+  have hDbarderiv : IsDeriv Dbar := isDeriv_liftEndQuot hP _ (envDeriv_isDeriv D hD)
+  have hderiv : ∀ x : L, IsDeriv (Drep x) := fun x => by
+    rw [hDrepval]; exact hDbarderiv.smul _
+  have hψlie : ∀ x y : L, ψ ⁅x, y⁆ = 0 := fun x y => (hψA _).mp (hNA (hLL x y))
+  have hDlie : ∀ x y : L, Drep ⁅x, y⁆ = ⁅Drep x, Drep y⁆ := by
+    intro x y
+    have h0 : ⁅Drep x, Drep y⁆ = (0 : Module.End K W) := by
+      rw [hDrepval, hDrepval, LieRing.of_associative_ring_bracket, smul_mul_assoc,
+        mul_smul_comm, smul_mul_assoc, mul_smul_comm, smul_smul, smul_smul,
+        mul_comm (ψ y) (ψ x), sub_self]
+    rw [h0, hDrepval, hψlie, zero_smul]
+  have hkeyL : ∀ x y : L,
+      proj ⁅x, y⁆ = ⁅proj x, proj y⁆ + ψ x • D (proj y) - ψ y • D (proj x) := by
+    intro x y
+    apply Subtype.ext
+    have hxH : ⁅x, H⁆ = -⁅H, x⁆ := by rw [← lie_skew H x, neg_neg]
+    show ⁅x, y⁆ - ψ ⁅x, y⁆ • H
+        = ⁅x - ψ x • H, y - ψ y • H⁆ + ψ x • ⁅H, y - ψ y • H⁆ - ψ y • ⁅H, x - ψ x • H⁆
+    rw [hψlie, zero_smul, sub_zero]
+    simp only [lie_sub, sub_lie, smul_lie, lie_smul, lie_self, smul_zero, sub_zero, hxH,
+      smul_neg]
+    abel
+  have hDbarq : ∀ z : ↥A, Dbar (q (ι K z)) = q (ι K (D z)) := by
+    intro z
+    rw [hDbar]
+    show (Submodule.Quotient.mk (envDeriv D hD (ι K z)) :
+      UniversalEnvelopingAlgebra K ↥A ⧸ toIdeal (I ^ (m' + 1)) hP) = _
+    rw [envDeriv_ι]
+    rfl
+  have hlie : ∀ z w : ↥A, (ι K ⁅z, w⁆ : UniversalEnvelopingAlgebra K ↥A)
+      = ι K z * ι K w - ι K w * ι K z := by
+    intro z w
+    rw [← LieRing.of_associative_ring_bracket]
+    exact LieHom.map_lie (ι K) z w
+  have hU : ∀ x y : L, (ι K (proj ⁅x, y⁆) : UniversalEnvelopingAlgebra K ↥A)
+      = ι K (proj x) * ι K (proj y) - ι K (proj y) * ι K (proj x)
+        + ψ x • ι K (D (proj y)) - ψ y • ι K (D (proj x)) := by
+    intro x y
+    rw [hkeyL x y, map_sub, map_add, map_smul, map_smul, hlie]
+  have hcrossed : ∀ x y : L,
+      f ⁅x, y⁆ = f x * f y - f y * f x + Drep x (f y) - Drep y (f x) := by
+    intro x y
+    simp only [hfval, hDrepval, LinearMap.smul_apply, hDbarq]
+    rw [hU x y]
+    simp only [map_sub, map_add, map_mul, map_smul]
+  set ρ : L →ₗ⁅K⁆ Module.End K W :=
+    lieHomOfMulLeftAddDeriv f Drep hderiv hDlie hcrossed with hρ
+  refine ⟨W, inferInstance, inferInstance, inferInstance, ρ, ?_, ?_⟩
+  · -- faithfulness
+    refine injective_of_map_eq_zero _ fun x hx => ?_
+    rw [hρ, lieHomOfMulLeftAddDeriv_eq_zero_iff] at hx
+    obtain ⟨hfx, hDx⟩ := hx
+    have hprojx : proj x = 0 := by
+      refine hfaith _ ?_
+      rw [← hqzero]
+      rw [hfval] at hfx
+      exact hfx
+    have hψx : ψ x = 0 := by
+      by_contra hne
+      have hDbar0 : Dbar = 0 := by
+        rcases smul_eq_zero.mp (by rw [← hDrepval]; exact hDx) with h | h
+        · exact absurd h hne
+        · exact h
+      have hcent : ∀ b : ↥A, ⁅H, (b : L)⁆ = 0 := by
+        intro b
+        have h1 : Dbar (q (ι K b)) = 0 := by rw [hDbar0]; rfl
+        rw [hDbarq b] at h1
+        have h3 : D b = 0 := hfaith _ ((hqzero _).mp h1)
+        rw [← hDval b, h3]
+        rfl
+      have hHall : ∀ z : L, ⁅H, z⁆ = 0 := by
+        intro z
+        have hz : z = ((proj z : ↥A) : L) + ψ z • H := by
+          rw [hprojval]; abel
+        rw [hz, lie_add, hcent (proj z), lie_smul, lie_self, smul_zero, add_zero]
+      have hHcent : H ∈ LieAlgebra.center K L := by
+        rw [LieModule.mem_maxTrivSubmodule]
+        intro z
+        rw [← lie_skew z H, hHall z, neg_zero]
+      have hHA' : H ∈ A := hNA (center_le_nilRadical K L hHcent)
+      rw [hψA, hψH] at hHA'
+      exact one_ne_zero hHA'
+    have hxval : x = ((proj x : ↥A) : L) + ψ x • H := by rw [hprojval]; abel
+    rw [hxval, hprojx, hψx]
+    simp
+  · -- nilpotency on the nilradical
+    intro x hx
+    have hxA : x ∈ A := hNA hx
+    have hψx : ψ x = 0 := (hψA x).mp hxA
+    have hprojx : proj x = ⟨x, hxA⟩ := by
+      apply Subtype.ext
+      rw [hprojval, hψx, zero_smul, sub_zero]
+    have hρx : ρ x = LinearMap.mulLeft K (f x) := by
+      rw [hρ, lieHomOfMulLeftAddDeriv_apply, hDrepval, hψx, zero_smul, add_zero]
+    refine ⟨m' + 1, ?_⟩
+    rw [hρx, LinearMap.pow_mulLeft]
+    have hmem : (ι K (proj x) : UniversalEnvelopingAlgebra K ↥A) ∈ I := by
+      refine hJI (ι_mem_genIdeal ?_)
+      rw [hprojx]
+      exact hnilincl _ hx
+    have hmem' : (ι K (proj x) : UniversalEnvelopingAlgebra K ↥A) ^ (m' + 1) ∈ I ^ (m' + 1) :=
+      Submodule.pow_mem_pow _ hmem _
+    have : f x ^ (m' + 1) = 0 := by
+      rw [hfval, ← map_pow, hqzero]
+      exact hmem'
+    rw [this, LinearMap.mulLeft_zero_eq_zero]
+
+end Extension
+
+/-! ### The induction -/
+
+section Induction
+
+/-- The nilpotent case, taken from the ported development. -/
+theorem exists_faithful_of_isNilpotent (K L : Type u) [Field K] [LieRing L] [LieAlgebra K L]
+    [FiniteDimensional K L] [LieRing.IsNilpotent L] :
+    ∃ (V : Type u) (_ : AddCommGroup V) (_ : Module K V) (_ : FiniteDimensional K V)
+      (ρ : L →ₗ⁅K⁆ Module.End K V),
+      Function.Injective ρ ∧ ∀ x ∈ nilRadical K L, IsNilpotent (ρ x) := by
+  obtain ⟨V, i1, i2, i3, i4, i5, hnil, hinj⟩ := exists_faithful_nilpotent_rep (K := K) (L := L)
+  letI := i1; letI := i2; letI := i3; letI := i4; letI := i5
+  exact ⟨V, i1, i2, i3, LieModule.toEnd K L V, hinj,
+    fun x _ => LieModule.isNilpotent_toEnd_of_isNilpotent K L V x⟩
+
+variable (K : Type u) [Field K] [CharZero K]
+
+/-- The solvable case of Ado's theorem, by induction on `finrank K L`. -/
+theorem exists_faithful_aux :
+    ∀ (n : ℕ) (L : Type u) [LieRing L] [LieAlgebra K L] [FiniteDimensional K L]
+      [LieAlgebra.IsSolvable L], Module.finrank K L ≤ n →
+      ∃ (V : Type u) (_ : AddCommGroup V) (_ : Module K V) (_ : FiniteDimensional K V)
+        (ρ : L →ₗ⁅K⁆ Module.End K V),
+        Function.Injective ρ ∧ ∀ x ∈ nilRadical K L, IsNilpotent (ρ x) := by
+  intro n
+  induction n with
+  | zero =>
+    intro L _ _ _ _ hle
+    haveI : Subsingleton L := Module.finrank_zero_iff (R := K).mp (by omega)
+    haveI : LieRing.IsNilpotent L := by
+      rw [LieAlgebra.isNilpotent_iff_forall (R := K)]
+      intro x
+      refine ⟨1, ?_⟩
+      rw [pow_one]
+      ext y
+      exact Subsingleton.elim _ _
+    exact exists_faithful_of_isNilpotent K L
+  | succ n ih =>
+    intro L _ _ _ _ hle
+    by_cases hN : nilRadical K L = ⊤
+    · haveI : LieRing.IsNilpotent L := by
+        let e : L →ₗ⁅K⁆ ↥(nilRadical K L) :=
+          { toFun := fun x => ⟨x, by rw [hN]; trivial⟩
+            map_add' := fun _ _ => rfl
+            map_smul' := fun _ _ => rfl
+            map_lie' := rfl }
+        have hinj : Function.Injective e := by
+          intro a b hab
+          exact congrArg (fun w : ↥(nilRadical K L) => (w : L)) hab
+        exact hinj.lieAlgebra_isNilpotent
+      exact exists_faithful_of_isNilpotent K L
+    · -- `⁅L, L⁆` is contained in the nilradical
+      have hLL : ∀ x y : L, ⁅x, y⁆ ∈ nilRadical K L := by
+        have hrad : LieAlgebra.radical K L = ⊤ := LieAlgebra.radical_eq_top_of_isSolvable K L
+        haveI : LieRing.IsNilpotent
+            ↥(⁅LieAlgebra.radical K L, LieAlgebra.radical K L⁆ : LieIdeal K L) :=
+          isNilpotent_derived_radical
+        have hle' : (⁅LieAlgebra.radical K L, LieAlgebra.radical K L⁆ : LieIdeal K L)
+            ≤ nilRadical K L := le_nilRadical
+        rw [hrad] at hle'
+        intro x y
+        exact hle' (LieSubmodule.lie_coe_mem_lie (⟨x, trivial⟩ : ↥(⊤ : LieIdeal K L))
+          (⟨y, trivial⟩ : ↥(⊤ : LieSubmodule K L L)))
+      -- a hyperplane containing the nilradical
+      obtain ⟨H, hH⟩ : ∃ x : L, x ∉ LieSubmodule.toSubmodule (nilRadical K L) := by
+        by_contra hcon
+        refine hN ?_
+        ext x
+        simp only [LieSubmodule.mem_top, iff_true]
+        by_contra hx
+        exact hcon ⟨x, hx⟩
+      obtain ⟨g, hgH, hgN⟩ :=
+        Submodule.exists_dual_map_eq_bot_of_notMem hH (inferInstance :
+          Module.Projective K (L ⧸ LieSubmodule.toSubmodule (nilRadical K L)))
+      set ψ : L →ₗ[K] K := (g H)⁻¹ • g with hψdef
+      have hψH : ψ H = 1 := by
+        rw [hψdef]
+        simp only [LinearMap.smul_apply, smul_eq_mul]
+        exact inv_mul_cancel₀ hgH
+      have hψN : ∀ x ∈ nilRadical K L, ψ x = 0 := by
+        intro x hx
+        have : g x ∈ Submodule.map g (LieSubmodule.toSubmodule (nilRadical K L)) :=
+          Submodule.mem_map_of_mem hx
+        rw [hgN] at this
+        rw [hψdef]
+        simp only [LinearMap.smul_apply, smul_eq_mul, (Submodule.mem_bot K).mp this, mul_zero]
+      have hlieker : ∀ (x m : L), m ∈ LinearMap.ker ψ → ⁅x, m⁆ ∈ LinearMap.ker ψ := by
+        intro x m _
+        exact hψN _ (hLL x m)
+      let A : LieIdeal K L :=
+        { __ := LinearMap.ker ψ
+          lie_mem := fun {x m} hm => hlieker x m hm }
+      have hψA : ∀ x : L, x ∈ A ↔ ψ x = 0 := fun x => Iff.rfl
+      have hNA : nilRadical K L ≤ A := fun {x} hx => (hψA x).mpr (hψN x hx)
+      have hAne : LieSubmodule.toSubmodule A ≠ ⊤ := by
+        intro hcon
+        have : H ∈ A := by rw [← LieSubmodule.mem_toSubmodule, hcon]; trivial
+        rw [hψA, hψH] at this
+        exact one_ne_zero this
+      have hfr : Module.finrank K ↥A ≤ n := by
+        have h1 := Submodule.finrank_lt (K := K) (V := L) hAne
+        have h2 : Module.finrank K ↥A = Module.finrank K ↥(LieSubmodule.toSubmodule A) := rfl
+        omega
+      obtain ⟨V₀, i1, i2, i3, ρ₀, hinj, hnil0⟩ := ih ↥A hfr
+      letI := i1; letI := i2; letI := i3
+      exact extension_step A H ψ hψA hψH hNA hLL ρ₀ hinj hnil0
+
+end Induction
+
+/-- **Ado's theorem for solvable Lie algebras in characteristic zero.** A finite-dimensional
+solvable Lie algebra over a field of characteristic zero has a faithful finite-dimensional
+representation in which the nilradical acts by nilpotent endomorphisms. -/
+theorem exists_faithful_nilpotent_on_nilRadical_of_isSolvable
+    {K L : Type u} [Field K] [LieRing L] [LieAlgebra K L]
+    [CharZero K] [FiniteDimensional K L] [LieAlgebra.IsSolvable L] :
+    ∃ (V : Type u) (_ : AddCommGroup V) (_ : Module K V) (_ : FiniteDimensional K V)
+      (ρ : L →ₗ⁅K⁆ Module.End K V),
+      Function.Injective ρ ∧ ∀ x ∈ nilRadical K L, IsNilpotent (ρ x) :=
+  exists_faithful_aux K (Module.finrank K L) L le_rfl
+
+end Submission.Ado

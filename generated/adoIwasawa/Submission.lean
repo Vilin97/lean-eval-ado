@@ -15,6 +15,7 @@ import Submission.Ado.Nilradical
 import Submission.Ado.Casimir
 import Submission.Ado.Weyl
 import Submission.Ado.Levi
+import Submission.Ado.Solvable
 
 open LeanEval.RepresentationTheory.AdoIwasawa
 
