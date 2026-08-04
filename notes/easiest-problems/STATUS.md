@@ -6,8 +6,9 @@ Last updated: 2026-08-04.
 
 **None of the three targets is solved, and none is close.** What exists is the
 survey that selected them, complete informal proofs, dependency-ordered Lean
-blueprints, and the first two compiling Lean files of the Ado development
-(≈250 lines out of an estimated 8 000–10 500).
+blueprints, and 679 compiling, axiom-clean lines of the Ado development out of
+an estimated 8 000–10 500. Nothing is submittable, so nothing appears on the
+leaderboard.
 
 The estimate that matters: `adoCharZero` needs the Poincaré–Birkhoff–Witt
 theorem, the Casimir element, Weyl's complete reducibility theorem, Whitehead's
@@ -28,9 +29,7 @@ single-session one. The same is true of the other 59 unsolved problems; see
 | `generated/adoCharZero/Submission/Ado/Easy.lean` | 70 | **Ado's theorem proved in two complete special cases**: trivial centre (`ad` is faithful) and abelian (explicit `(dim L + 1)`-dimensional representation on `K × L`). Both hold over any field. | clean, no warnings |
 | `generated/adoCharZero/Submission/Ado/Embed.lean` | 86 | Ado's property for `L` **iff** `L` embeds into a finite-dimensional associative `K`-algebra with brackets going to ring commutators. This is the bridge both constructive halves cross at the end (§3 with `U(N)/J(N)^k`, §7 with `u(𝔤̂)`). | clean, no warnings |
 | `generated/adoCharZero/Submission/Ado/Closure.lean` | 63 | Ado's property is inherited along injective Lie morphisms (so passes to subalgebras — the §7 descent from the `p`-envelope) and is stable under products; plus **Ado for Lie algebras with trivial radical**, in particular semisimple ones. | clean, no warnings |
-
 | `generated/adoCharZero/Submission/Ado/Filtration.lean` | 129 | The degree filtration on `U(L)`: `ι '' L` generates `U(L)` as an algebra (`adjoin_range_ι_eq_top`, by the retraction argument through the universal property), `⨆ j, gen ^ j = ⊤`, and each `gen ^ j` is finite-dimensional. **This is the spanning half of PBW, and it does not need the basis theorem.** | clean, no warnings |
-
 | `generated/adoCharZero/Submission/Ado/Truncation.lean` | 82 | **`U(L) ⧸ J(L)^k` is finite-dimensional.** `filt k ⊔ augPow k = ⊤` splits `U(L)` into low degree and degree `≥ k`, and the quotient is the image of the finite-dimensional `filt k`. This is one of the two ingredients of Birkhoff's embedding theorem, and it needs no PBW basis theorem. | clean, no warnings |
 
 All seven files are mirrored into `generated/adoIwasawa/Submission/Ado/`. Total
