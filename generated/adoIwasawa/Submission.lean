@@ -7,6 +7,7 @@ import Submission.Ado.Embed
 import Submission.Ado.Closure
 import Submission.Ado.Filtration
 import Submission.Ado.Truncation
+import Submission.Ado.AugIdeal
 
 open LeanEval.RepresentationTheory.AdoIwasawa
 

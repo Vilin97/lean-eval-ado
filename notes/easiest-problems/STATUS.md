@@ -6,7 +6,7 @@ Last updated: 2026-08-04.
 
 **None of the three targets is solved, and none is close.** What exists is the
 survey that selected them, complete informal proofs, dependency-ordered Lean
-blueprints, and 679 compiling, axiom-clean lines of the Ado development out of
+blueprints, and 757 compiling, axiom-clean lines of the Ado development out of
 an estimated 8 000–10 500. Nothing is submittable, so nothing appears on the
 leaderboard.
 
@@ -32,8 +32,10 @@ single-session one. The same is true of the other 59 unsolved problems; see
 | `generated/adoCharZero/Submission/Ado/Filtration.lean` | 129 | The degree filtration on `U(L)`: `ι '' L` generates `U(L)` as an algebra (`adjoin_range_ι_eq_top`, by the retraction argument through the universal property), `⨆ j, gen ^ j = ⊤`, and each `gen ^ j` is finite-dimensional. **This is the spanning half of PBW, and it does not need the basis theorem.** | clean, no warnings |
 | `generated/adoCharZero/Submission/Ado/Truncation.lean` | 82 | **`U(L) ⧸ J(L)^k` is finite-dimensional.** `filt k ⊔ augPow k = ⊤` splits `U(L)` into low degree and degree `≥ k`, and the quotient is the image of the finite-dimensional `filt k`. This is one of the two ingredients of Birkhoff's embedding theorem, and it needs no PBW basis theorem. | clean, no warnings |
 
-All seven files are mirrored into `generated/adoIwasawa/Submission/Ado/`. Total
-679 lines.
+| `generated/adoCharZero/Submission/Ado/AugIdeal.lean` | 78 | `augPow k` is a two-sided ideal and the filtration is multiplicative (`augPow k * augPow l ≤ augPow (k+l)`) and antitone. These are the submodule-level facts under Lemma 4.4, where a derivation with `D L ⊆ N` is shown to preserve `augPow k`. | clean, no warnings |
+
+All eight files are mirrored into `generated/adoIwasawa/Submission/Ado/`. Total
+757 lines.
 
 Birkhoff's theorem (§3) is now down to a single missing input: `N ∩ J(N)^k = ⊥`
 for `k ≥ 2`, i.e. the *injectivity* half of PBW. Everything else it needs is
