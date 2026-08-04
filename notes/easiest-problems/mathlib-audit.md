@@ -80,3 +80,89 @@ One direction of the bridge does exist (`Nilpotent.lean:919`):
    final step cheap once nilpotency of `ad` is established.
 4. Nothing upstream can be ported for PBW/Casimir/Weyl/Whitehead/Levi; all five
    are original work.
+
+---
+
+# External scout: prior art (2026-08-04)
+
+## The decisive find: `Komyyy/ado`
+
+<https://github.com/Komyyy/ado> — "Ongoing human written formal proof of Ado's
+theorem", Miyahara Kō (Mathlib contributor), Apache-2.0, created 2026-07-20,
+last push 2026-08-03, CI green, **2222 lines, completely sorry-free** (no
+`sorry`/`admit`/`axiom`/`native_decide`). Toolchain `v4.33.0-rc1`, Mathlib
+pinned to `master`.
+
+Already proved there:
+
+* `Ado/Statement.lean` — `LieAlgebra.BundledAdoSpace K 𝔤` (a finite-dimensional
+  faithful `𝔤`-module on which `maxNilpotentIdeal K 𝔤` acts nilpotently), the
+  class `LieAlgebra.IsAdo K 𝔤`, and `AdoSpace K 𝔤`. This is the **strong** form,
+  which is what makes the induction close.
+* `Ado/LieAbelian.lean` — the abelian case, via `𝔤 × K` with the shear action
+  (the same construction as our `Easy.lean`).
+* `Ado/Nilpotent.lean` — 928 lines, the **entire nilpotent case**:
+  `instance LieAlgebra.IsAdo.of_isNilpotent : IsAdo K 𝔫`, by induction on
+  `finrank K 𝔫` splitting off a codimension-one ideal.
+* `Ado/ForMathlib/` — 20 files of reusable Lie-module plumbing
+  (`LieModuleShrink`, `LieModuleProd`, `LieModuleTransferInstance`,
+  `LieQuotient`, `LieModuleNilpotent`, `LieFinrank`, `SubmodulePow`,
+  `TensorAlgebra`, `UniversalEnvelopingAlgebra`).
+
+## Consequence: PBW is not needed for Ado
+
+Tao's *informal* proof invokes PBW, but this Lean development **replaces it
+entirely** with an explicit filtration on the tensor algebra — `lengthSubmodule
+m` (span of images of tensor products of length `≥ m`), `nilSubmodule`,
+`depthSubmodule m`, `depthLimit`, and
+`depthSubmodule_depthLimit_le_nilSubmodule` — giving finite-dimensionality of
+`U(𝔞) ⧸ nilSubmodule` from the **spanning half only**. Faithfulness comes from
+the induction hypothesis, not from injectivity of `ι`.
+
+This matches what our own `Extension.lean` design already implies: in Setup 4.1
+the ideal is `I = 𝔮 + U·ι(N)·U` with `𝔮 = ker(U(𝔞) → End V₀)`, and `I^N ⊆ 𝔮`
+gives `𝔞 ∩ I^m ⊆ 𝔞 ∩ 𝔮 = ⊥` **by faithfulness of `ρ₀`**, with no appeal to a
+PBW basis. Our `Filtration.lean`/`Truncation.lean` (the spanning half) is
+therefore already the right amount of PBW, and the linear-independence half is
+optional. The PBW track has been redirected to porting `Komyyy/ado` instead.
+
+## Levi is the real wall
+
+Levi decomposition exists **nowhere in Lean 4** — not Mathlib, not master, not
+any PR, not Lean Pool, not Tau Ceti, not anywhere on GitHub. Mathlib's
+`docs/1000.yaml` lists `Q6535568: Levi's theorem` with no `decl:`. It is also
+**not** in `Komyyy/ado`, which has not yet reached the general case. This is
+from-scratch work and is now the critical path.
+
+## Other reusable, sorry-free, Apache-2.0 material
+
+* `Vilin97/lean-pool` → `LeanPool/VirasoroProject/LieAlgebraModuleUEA.lean`:
+  `UniversalEnvelopingAlgebra.mkAlgHom_surjective`, `.induction`,
+  `.central_of_forall_lie_eq_zero` (exactly the "Casimir is central" shape),
+  `.representation`. Also `LieVerma.lean` builds Verma modules from a
+  tri-partition of a basis, deliberately avoiding PBW.
+* `LeanPool/LowDimSolvClassification/GeneralResults.lean`:
+  `Basis.extendFinSucc`, `LinearEquiv.ofComplSubmodules`,
+  `Submodule.compl_span_singleton_of_codim_one`, `derivedSeries_succ_is_span`,
+  `commutator_eq_span`, `solvable_of_commutator_solvable`. No Levi.
+* `TauCetiProject/TauCeti` → `TauCeti/Algebra/Lie/Sl2/WeightString.lean`: the
+  full finite-dimensional `sl₂` classification (ladder basis,
+  `finrank_eq_of_hasPrimitiveVectorWith`,
+  `lieModuleEquivOfHasPrimitiveVectorWith`), sorry-free. Layer 0 for any Weyl
+  build. No Casimir, no PBW, no Levi.
+* `TauCetiProject/TauCetiRoadmap` →
+  `RepresentationTheory/LieHighestWeight/Suggested.lean`: 133 `sorry`s, but they
+  are *typed statements against the real Mathlib API* for `casimirElement`,
+  `casimirElement_mem_center`, `weyl_complete_reducibility` — worth copying as
+  signatures. Its `README.md` §Layer 5 has the Casimir→Weyl plan and
+  independently confirms the Mathlib gaps.
+
+## Nothing landed upstream
+
+Zero commits have touched `Mathlib/Algebra/Lie/` since our pinned rev
+`905b95818e`. The only PBW-titled Mathlib PR (#36936) is *categorical* PBW for
+monads, is a draft, and contains a live `sorry`. No PR or issue for Levi,
+Casimir, Weyl, or Whitehead. The many `HautevilleHouse/*-canonical-lane-mathlib`
+GitHub hits are machine-generated and mathematically vacuous (`poincareBirkhoffWitt`
+is an opaque `Prop` field and the "theorem" projects its own hypothesis) —
+ignore them.
