@@ -29,8 +29,10 @@ single-session one. The same is true of the other 59 unsolved problems; see
 | `generated/adoCharZero/Submission/Ado/Embed.lean` | 86 | Ado's property for `L` **iff** `L` embeds into a finite-dimensional associative `K`-algebra with brackets going to ring commutators. This is the bridge both constructive halves cross at the end (§3 with `U(N)/J(N)^k`, §7 with `u(𝔤̂)`). | clean, no warnings |
 | `generated/adoCharZero/Submission/Ado/Closure.lean` | 63 | Ado's property is inherited along injective Lie morphisms (so passes to subalgebras — the §7 descent from the `p`-envelope) and is stable under products; plus **Ado for Lie algebras with trivial radical**, in particular semisimple ones. | clean, no warnings |
 
-All five files are mirrored into `generated/adoIwasawa/Submission/Ado/`. Total
-468 lines.
+| `generated/adoCharZero/Submission/Ado/Filtration.lean` | 129 | The degree filtration on `U(L)`: `ι '' L` generates `U(L)` as an algebra (`adjoin_range_ι_eq_top`, by the retraction argument through the universal property), `⨆ j, gen ^ j = ⊤`, and each `gen ^ j` is finite-dimensional. **This is the spanning half of PBW, and it does not need the basis theorem.** | clean, no warnings |
+
+All six files are mirrored into `generated/adoIwasawa/Submission/Ado/`. Total
+597 lines.
 
 `#print axioms` on every proved declaration gives exactly
 `[propext, Classical.choice, Quot.sound]` — no `sorryAx`, so these results
