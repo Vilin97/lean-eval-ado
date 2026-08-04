@@ -118,15 +118,27 @@ Standard monomials are **independent**: if `Σ_A c_A x_A = 0` in `U(𝔤)`, appl
 so `Σ_A c_A (y_A + …) = 0` in `S` forces, by looking at the top degree and
 downward induction, `c_A = 0` for all `A`. ∎
 
-**Corollary 1.2.** `ι : 𝔤 → U(𝔤)` is injective, and `𝔤 ∩ J(𝔤)² = 0` inside
-`U(𝔤)`.
+**Corollary 1.2.** `ι : 𝔤 → U(𝔤)` is injective.
 
-*Proof.* The filtration `U_{≤m}` by PBW degree satisfies `J^m ⊆ U_{≤ ·}`… more
-precisely `J^m` is spanned by the standard monomials of length `≥ m`, so
-`ι(𝔤) ∩ J² = 0` since `ι(𝔤)` is spanned by the length-`1` monomials. ∎
+*Proof.* `ι(x)` is the standard monomial of the length-one word `x`, and
+distinct basis elements give distinct standard monomials. ∎
 
-**Corollary 1.3.** `dim_K U(𝔤)/J^m = #{A : |A| < m} = binom(n + m − 1, n)`,
-in particular it is finite. And `J^m/J^{m+1} ≅ Sym^m(𝔤)`.
+> **Correction (2026-08-04).** An earlier version of this note also asserted
+> `ι(𝔤) ∩ J(𝔤)² = ⊥`, where `J(𝔤)` is the augmentation *ideal*. **That is
+> false.** Since `ι` is a Lie morphism,
+> `ι ⁅x, y⁆ = ι x · ι y − ι y · ι x ∈ J²`, so every nonzero bracket is a
+> counterexample; if `𝔤` is perfect then `ι(𝔤) ⊆ J²` and in fact `J = J²`.
+> The confusion was between the augmentation-ideal powers `J^m` and the PBW
+> *filtration* `U_{≤m}` (the span of standard monomials of length `≤ m`), which
+> are different objects. PBW controls the latter:
+> `U_{≤m}/U_{≤m−1} ≅ Sym^m(𝔤)`, and `ι(𝔤) ∩ U_{≤0} = ⊥`.
+> The formalised results in `Truncation.lean` are unaffected — `U(𝔤) ⧸ augPow k`
+> is finite-dimensional as proved — but note `augPow` can collapse
+> (`augPow k = augPow 1` for perfect `𝔤`), so it is only informative in the
+> nilpotent range, which is where §3 uses it.
+
+**Corollary 1.3.** `U_{≤m}` is finite-dimensional, of dimension
+`#{A : |A| ≤ m}`.
 
 **Corollary 1.4.** `U(𝔤)` is left and right Noetherian.
 *Proof.* `gr U(𝔤) ≅ Sym(𝔤)` is Noetherian, and a filtered ring whose associated
@@ -190,12 +202,18 @@ W := U(𝔫) / J(𝔫)^k,     σ : 𝔫 → 𝔤𝔩(W),  σ(x) = left multiplic
 Then `W` is finite-dimensional, `σ` is a Lie algebra morphism, `σ` is injective,
 and `σ(x)` is nilpotent for every `x ∈ 𝔫` (indeed `σ(x₁)⋯σ(x_k) = 0`).
 
-*Proof.* `W` is finite-dimensional by Corollary 1.3. `σ` is a morphism because
-`L_x L_y − L_y L_x = L_{xy − yx} = L_{[x,y]}` in `U(𝔫)`. If `σ(x) = 0` then
-`x = x·1 ∈ J^k ⊆ J²`, so `x = 0` by Corollary 1.2. Finally
-`σ(x₁)⋯σ(x_k) = L_{x₁⋯x_k}` and `x₁⋯x_k ∈ J^k`. ∎
+*Proof.* `W` is finite-dimensional by `Truncation.lean`. `σ` is a morphism
+because `L_x L_y − L_y L_x = L_{xy − yx} = L_{[x,y]}` in `U(𝔫)`. Faithfulness
+needs `ι(𝔫) ∩ J^k = ⊥`, which for *nilpotent* `𝔫` holds once `k` exceeds the
+nilpotency class — see the correction under Corollary 1.2; it is **not** true at
+`k = 2`. Finally `σ(x₁)⋯σ(x_k) = L_{x₁⋯x_k}` and `x₁⋯x_k ∈ J^k`. ∎
 
-Note this needs no induction and no characteristic hypothesis.
+> **Superseded (2026-08-04).** This route is no longer used. The nilpotent case
+> is now supplied by the port of `Komyyy/ado`, whose induction obtains
+> faithfulness from the inductive hypothesis rather than from any injectivity
+> statement about `ι`, and therefore needs no PBW input at all. See
+> `Submission/Ado/Port/Nilpotent.lean` and the bridge
+> `Submission.Ado.exists_faithful_nilpotent_rep`.
 
 ---
 

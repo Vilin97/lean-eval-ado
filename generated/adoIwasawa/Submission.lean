@@ -10,6 +10,7 @@ import Submission.Ado.Truncation
 import Submission.Ado.AugIdeal
 import Submission.Ado.EnvDeriv
 import Submission.Ado.DerivedRadical
+import Submission.Ado.PBW.Basis
 
 open LeanEval.RepresentationTheory.AdoIwasawa
 
