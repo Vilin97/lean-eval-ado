@@ -24,9 +24,14 @@ single-session one. The same is true of the other 59 unsolved problems; see
 | file | lines | contents | build |
 | --- | --- | --- | --- |
 | `generated/adoCharZero/Submission/Ado/Basic.lean` | 105 | §0 reductions: `HasFaithfulFinRep`, direct sums of representations, `ad` kills exactly the centre, and the reduction of Ado to "faithful on the centre" | clean, no warnings |
-| `generated/adoCharZero/Submission/Ado/DerivRep.lean` | 145 | §4 engine: `IsDeriv`, `⁅D, mulLeft a⁆ = mulLeft (D a)`, `⁅mulLeft a, mulLeft b⁆ = mulLeft (a*b - b*a)`, the combined representation `x ↦ mulLeft (f x) + D x` with its exact Lie-morphism criterion, and its kernel criterion | clean, no warnings |
+| `generated/adoCharZero/Submission/Ado/DerivRep.lean` | 146 | §4 engine: `IsDeriv`, `⁅D, mulLeft a⁆ = mulLeft (D a)`, `⁅mulLeft a, mulLeft b⁆ = mulLeft (a*b - b*a)`, the combined representation `x ↦ mulLeft (f x) + D x` with its exact Lie-morphism criterion, and its kernel criterion | clean, no warnings |
+| `generated/adoCharZero/Submission/Ado/Easy.lean` | 70 | **Ado's theorem proved in two complete special cases**: trivial centre (`ad` is faithful) and abelian (explicit `(dim L + 1)`-dimensional representation on `K × L`). Both hold over any field. | clean, no warnings |
 
-Both files are mirrored into `generated/adoIwasawa/Submission/Ado/`.
+All three files are mirrored into `generated/adoIwasawa/Submission/Ado/`.
+
+`#print axioms` on every proved declaration gives exactly
+`[propext, Classical.choice, Quot.sound]` — no `sorryAx`, so these results
+would pass comparator's axiom check as they stand.
 
 `lake build Submission` in both `generated/adoCharZero` and
 `generated/adoIwasawa` succeeds with exactly one warning, the intended `sorry`

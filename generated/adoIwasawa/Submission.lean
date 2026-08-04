@@ -2,6 +2,7 @@ import ChallengeDeps
 import Submission.Helpers
 import Submission.Ado.Basic
 import Submission.Ado.DerivRep
+import Submission.Ado.Easy
 
 open LeanEval.RepresentationTheory.AdoIwasawa
 
