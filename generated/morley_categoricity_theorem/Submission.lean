@@ -11,6 +11,7 @@ import Submission.Morley.EM
 import Submission.Morley.TwoCardinal
 import Submission.Morley.Transfer
 import Submission.Morley.Realize
+import Submission.Morley.Morleyization
 import Submission.Morley.Ramsey
 
 open Cardinal
