@@ -148,7 +148,12 @@ Working entirely inside `Poly K n`:
   *real-analytic* knots and analytic isotopies, not smooth ones. Every other knot
   file in the repository (`KnotTheory/Prelude.lean`,
   `KnotTheory/PardonDistortion.lean`) writes the ascribed `(⊤ : ℕ∞)`, so this looks
-  unintended.
+  unintended. Machine-verified in
+  [`contdiff-top-is-analytic.lean`](contdiff-top-is-analytic.lean): Mathlib's
+  `Mathlib/Analysis/Calculus/ContDiff/FTaylorSeries.lean:118` defines
+  `notation3 "ω" => (⊤ : WithTop ℕ∞)`, so `(⊤ : ℕ∞ω) = ω` by `rfl`,
+  `ContDiff ℝ ⊤ f ↔ ContDiff ℝ ω f` by `Iff.rfl`,
+  `((⊤ : ℕ∞) : ℕ∞ω) ≠ (⊤ : ℕ∞ω)` by `decide`, and `ContDiff ℝ ⊤ f → AnalyticOnNhd ℝ f univ`.
 * `conway_knot_not_smoothly_slice` is exposed to a vacuity attack that its sibling
   `exists_topologically_slice_not_smoothly_slice` is protected against. `PLKnot`
   does not bundle simplicity, and no smooth knot's image can be
