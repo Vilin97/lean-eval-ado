@@ -50,7 +50,7 @@ definition*, in every degree, with no induction. -/
 
 /-- If `j ≼ a` and `j < i` then `j` is the least index of `a + eⱼ`, so the
 recursive branch of the definition applies to `ρ(xᵢ) z^(a+eⱼ)`. -/
-theorem not_aligned_add_e {i j : Fin n} {a : Mon n} (haj : Aligned j a) (hji : j < i) :
+theorem not_aligned_add_e {i j : Fin n} {a : Mon n} (_haj : Aligned j a) (hji : j < i) :
     ¬ Aligned i (a + e j) := by
   intro h
   have hj : j ∈ (a + e j).support := by
@@ -80,22 +80,19 @@ theorem trunc_add (d : ℕ) (f g : Poly K n) :
 theorem trunc_eq_self {d : ℕ} {f : Poly K n} (h : DegLE f d) : trunc d f = f := by
   refine Finsupp.ext fun c => ?_
   by_cases hc : c.degree ≤ d
-  · simp [trunc, Finsupp.filter_apply, hc]
+  · simp [trunc, hc]
   · have : f c = 0 := by
       by_contra hne
       exact hc (h c (Finsupp.mem_support_iff.mpr hne))
-    simp [trunc, Finsupp.filter_apply, hc, this]
+    simp [trunc, hc, this]
 
 theorem trunc_mono_of_lt {d : ℕ} {b : Mon n} (h : d < b.degree) :
     trunc d (mono b : Poly K n) = 0 := by
   refine Finsupp.ext fun c => ?_
   by_cases hc : c.degree ≤ d
   · have hcb : c ≠ b := by rintro rfl; omega
-    simp [trunc, Finsupp.filter_apply, hc, mono, Finsupp.single_apply, hcb]
-  · simp [trunc, Finsupp.filter_apply, hc]
-
-theorem degree_add_e (a : Mon n) (i : Fin n) : (a + e i).degree = a.degree + 1 := by
-  rw [map_add, degree_e]
+    simp [trunc, hc, mono, hcb]
+  · simp [trunc, hc]
 
 /-- The truncation of `act γ i a` below the top degree is exactly the
 "correction term" of (B). -/
@@ -143,14 +140,5 @@ theorem lie_rel_aligned {i j : Fin n} {a : Mon n} (haj : Aligned j a) (hji : j <
     conv_lhs => rw [act_eq_mono_add_trunc i a]
     rw [map_add, rho_mono, act_of_aligned hajei]
   rw [hL, hR]; abel
-
-/-! ### The general Lie relation -/
-
-/-- **(C).** The commutator of the actions of two basis vectors is the action of
-their bracket. Proved by strong induction on the degree. -/
-theorem lie_rel (i j : Fin n) (a : Mon n) :
-    rho γ i (rho γ j (mono a)) - rho γ j (rho γ i (mono a))
-      = ∑ k : Fin n, γ i j k • act γ k a := by
-  sorry
 
 end Submission.Ado.PBW
