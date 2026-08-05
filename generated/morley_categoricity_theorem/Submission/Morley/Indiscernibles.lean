@@ -58,7 +58,7 @@ theorem exists_infinite_subset_monochromatic_tuple {S : Set ℕ} (hS : S.Infinit
 
 /-- A sequence `a : I → M` indexed by a linear order `I` is *order indiscernible* if any two
 strictly increasing tuples drawn from it satisfy exactly the same formulas. -/
-def IsOrderIndiscernible {L : FirstOrder.Language.{u, v}} {M : Type w} [L.Structure M]
+def IsOrderIndiscernible (L : FirstOrder.Language.{u, v}) {M : Type w} [L.Structure M]
     {I : Type*} [LinearOrder I] (a : I → M) : Prop :=
   ∀ (n : ℕ) (φ : L.Formula (Fin n)) (i j : Fin n → I),
     StrictMono i → StrictMono j → (φ.Realize (a ∘ i) ↔ φ.Realize (a ∘ j))
@@ -228,7 +228,7 @@ theorem isSatisfiable_indiscernibleExtension (T : L.Theory) (M : Type w) [L.Stru
 theorem exists_orderIndiscernible_of_isSatisfiable (T : L.Theory) (I : Type w') [LinearOrder I]
     (h : (indiscernibleExtension T I).IsSatisfiable) :
     ∃ (N : T.ModelType.{u, v, max u v w'}) (a : I → N),
-      Function.Injective a ∧ IsOrderIndiscernible (L := L) a := by
+      Function.Injective a ∧ IsOrderIndiscernible L a := by
   obtain ⟨N⟩ := h
   letI : L.Structure N := (L.lhomWithConstants I).reduct N
   have hT : N ⊨ (L.lhomWithConstants I).onTheory T :=
@@ -241,7 +241,7 @@ theorem exists_orderIndiscernible_of_isSatisfiable (T : L.Theory) (I : Type w') 
   have hinj : Function.Injective a := by
     rw [ha, ← Set.injOn_univ]
     exact (L.model_distinctConstantsTheory (Set.univ : Set I)).mp hD
-  have hind : IsOrderIndiscernible (L := L) a := by
+  have hind : IsOrderIndiscernible L a := by
     intro n φ i j hi hj
     have hmem : indisSentence (⟨n, φ, i, j⟩ : IndisData L I) ∈ indiscernibleTheory L I :=
       ⟨⟨n, φ, i, j⟩, ⟨hi, hj⟩, rfl⟩
@@ -259,7 +259,7 @@ The proof combines the infinite Ramsey theorem with the compactness theorem. -/
 theorem exists_orderIndiscernible (T : L.Theory) (M : Type w) [L.Structure M] [M ⊨ T]
     [Infinite M] (I : Type w') [LinearOrder I] :
     ∃ (N : T.ModelType.{u, v, max u v w'}) (a : I → N),
-      Function.Injective a ∧ IsOrderIndiscernible (L := L) a :=
+      Function.Injective a ∧ IsOrderIndiscernible L a :=
   exists_orderIndiscernible_of_isSatisfiable T I (isSatisfiable_indiscernibleExtension T M I)
 
 end Existence
