@@ -328,3 +328,87 @@ Steps 1, 2 and 3a are independent of Step 3b and of each other, so they can be
 built in parallel while 3b — the only genuinely hard file — is worked on
 separately. Nothing here touches the characteristic-zero development, so
 `adoCharZero` cannot regress.
+
+---
+
+# Revision, 2026-08-05: a shorter route, entirely inside the PBW module
+
+Steps 3b and 4 above are now proved (`Submission/Ado/PBW/{Defs,Props,Action,Module,Env,
+Injective,Unitriangular}.lean`). While assembling Step 4 it became clear that the
+plan above — PBW basis for `U(L)`, then freeness of `U(L)` over `K[c₁,…,cₙ]`, then
+`ι(L) ∩ I = 0`, then `A = U(L)/I` — is more than is needed. Everything can be done
+inside the polynomial module `Poly K n`, and the finite-dimensional representation
+comes out directly, with **no** basis theorem for `U(L)` at all.
+
+## The revised argument
+
+Let `char K = p`, `L` finite-dimensional with basis `x₁,…,xₙ`. By
+`Submission.Ado.exists_pPolynomial_relation_of_ge` choose one exponent `q = p^m ≥ 2`
+that works for every `ad xⱼ` simultaneously, with coefficients `μ`, so that
+
+```
+cⱼ := ι(xⱼ)^q − Σ_{t<q} μⱼₜ ι(xⱼ)^t
+```
+
+is **central** in `U(L)` (`Submission.Ado.central_pPolynomial`).
+
+Let `Cⱼ : Poly K n →ₗ[K] Poly K n` be the operator by which `cⱼ` acts, i.e.
+`Cⱼ = ρ(xⱼ)^q − Σ_t μⱼₜ ρ(xⱼ)^t`. Because the `cⱼ` are central and the action is an
+algebra map, the `Cⱼ` commute with every `ρ(x)` and with each other.
+
+**1. Triangularity.** From (A) and (B), `ρ(xⱼ)^k (z^a) = z^{a+k eⱼ} + (degree < |a|+k)`,
+hence `Cⱼ (z^a) = z^{a+q eⱼ} + (degree < |a|+q)`, hence for a multi-index `m`
+
+```
+C^m (z^a) = z^{a + q·m} + (degree < |a| + q|m|).
+```
+
+**2. A bijection.** Division with remainder by `q` in each coordinate,
+
+```
+Mon n ≃ Restricted × Mon n,    a ↦ (a mod q, a div q),    (b, m) ↦ b + q·m,
+```
+
+where `Restricted := {b : Mon n | ∀ j, b j < q}` is a set of cardinality `q^n`.
+
+**3. A basis.** The family `f (b, m) := C^m (z^b)`, indexed by `Restricted × Mon n`,
+is unitriangular over that bijection, so by
+`Submission.Ado.PBW.Unitriangular.linearIndependent` and `.span_eq_top` it is a
+**basis of `Poly K n`**.
+
+**4. The finite-dimensional module.** Put `N := Σⱼ Cⱼ(Poly K n)`. Under the basis of
+step 3, `N` is exactly the span of `{f (b, m) : m ≠ 0}`, so
+
+```
+Q := Poly K n / N   has basis the images of  {z^b : b ∈ Restricted},   dim_K Q = q^n.
+```
+
+`N` is stable under every `ρ(x)` because `Cⱼ` commutes with `ρ(x)`, so `L` acts on `Q`.
+
+**5. Faithfulness.** If `x` acts as `0` on `Q` then `ρ(x)(z⁰) ∈ N`. But
+`ρ(x)(z⁰) = Σᵢ (repr x)ᵢ zᵢ = Σᵢ (repr x)ᵢ f (eᵢ, 0)` — note `eᵢ ∈ Restricted` because
+`q ≥ 2` — and by the linear independence of step 3 an element of
+`span {f (b,m) : m ≠ 0}` has no `f (·, 0)` component. Hence every `(repr x)ᵢ = 0`, so
+`x = 0`.
+
+So `L → Module.End K Q` is a faithful finite-dimensional representation, which is
+`adoIwasawa` in characteristic `p`; characteristic `0` is
+`Submission.Ado.hasFaithfulFinRep_charZero`, already proved and on the leaderboard.
+
+## What this removes from the earlier plan
+
+* no PBW **basis theorem for `U(L)`** is needed (only the module, already built);
+* no freeness of `U(L)` over `K[c₁,…,cₙ]`;
+* no finite-dimensionality of `U(L)/I` — finite-dimensionality of `Q` falls out of
+  step 3 for free;
+* no `Submission/Ado/PBW/Sorting.lean` (the spanning half of PBW), which stays in the
+  development as an independent result.
+
+## Remaining files
+
+| file | contents | estimate |
+| --- | --- | --- |
+| `PBW/Pow.lean` | `ρ(xⱼ)^k (z^a) = z^{a+k eⱼ} + lower`; `Cⱼ`; step 1 | 300 |
+| `PBW/DivMod.lean` | the `Mon n ≃ Restricted × Mon n` bijection of step 2 | 250 |
+| `PBW/Restricted.lean` | step 3: the basis | 200 |
+| `CharP/FiniteRep.lean` | steps 4 and 5, and `adoIwasawa` | 400 |
