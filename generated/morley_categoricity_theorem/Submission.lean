@@ -13,6 +13,7 @@ import Submission.Morley.Transfer
 import Submission.Morley.Realize
 import Submission.Morley.Morleyization
 import Submission.Morley.Bridge
+import Submission.Morley.Chains
 import Submission.Morley.Ramsey
 
 open Cardinal
