@@ -1,0 +1,156 @@
+import Submission.Ado.PBW.Props
+
+/-!
+# The PBW action as a Lie module structure
+
+`Submission/Ado/PBW/Defs.lean` builds `act γ i a`, the value of `ρ(xᵢ) z^a`.
+Here we package it as a family of linear endomorphisms of `Poly K n`, transport
+it along a basis of `L`, and state the Lie relation (C).
+
+The two facts that make everything work are proved in `Props.lean`:
+
+* `act_of_aligned` : `Aligned i a → act γ i a = mono (a + eᵢ)`;
+* `act_sub_mono_degLE` : `act γ i a - mono (a + eᵢ)` lives in degrees `≤ |a|`.
+-/
+
+universe u
+
+namespace Submission.Ado.PBW
+
+variable {K : Type u} [Field K] {n : ℕ} {γ : Fin n → Fin n → Fin n → K}
+
+/-! ### Evaluation of the unit exponent vectors -/
+
+@[simp] theorem e_apply_self (i : Fin n) : (e i : Mon n) i = 1 :=
+  Finsupp.single_eq_same
+
+theorem e_apply_of_ne {i k : Fin n} (h : i ≠ k) : (e i : Mon n) k = 0 :=
+  Finsupp.single_eq_of_ne h.symm
+
+/-- The action of the `i`-th basis vector, as a linear endomorphism. -/
+noncomputable def rho (γ : Fin n → Fin n → Fin n → K) (i : Fin n) :
+    Poly K n →ₗ[K] Poly K n :=
+  Finsupp.linearCombination K (act γ i)
+
+@[simp] theorem rho_mono (i : Fin n) (a : Mon n) :
+    rho γ i (mono a) = act γ i a := by
+  simp [rho, mono, Finsupp.linearCombination_single]
+
+/-- `rho` applied to a monomial with an explicit coefficient. -/
+theorem rho_single (i : Fin n) (a : Mon n) (c : K) :
+    rho γ i (Finsupp.single a c) = c • act γ i a := by
+  simp [rho, Finsupp.linearCombination_single]
+
+/-! ### The aligned case of the Lie relation
+
+This is the heart of the construction: with Humphreys' recursion (which applies
+`ρ(xⱼ)` rather than multiplication by `zⱼ` to the tail), the commutation
+relation for a pair `i > j` on a monomial `a` with `j ≼ a` holds *by
+definition*, in every degree, with no induction. -/
+
+/-- If `j ≼ a` and `j < i` then `j` is the least index of `a + eⱼ`, so the
+recursive branch of the definition applies to `ρ(xᵢ) z^(a+eⱼ)`. -/
+theorem not_aligned_add_e {i j : Fin n} {a : Mon n} (haj : Aligned j a) (hji : j < i) :
+    ¬ Aligned i (a + e j) := by
+  intro h
+  have hj : j ∈ (a + e j).support := by
+    rw [Finsupp.mem_support_iff, Finsupp.add_apply, e_apply_self]
+    omega
+  exact absurd (h j hj) (not_le.mpr hji)
+
+theorem lead_add_e {i j : Fin n} {a : Mon n} (haj : Aligned j a) (hji : j < i) :
+    lead (not_aligned_add_e haj hji) = j := by
+  refine le_antisymm ?_ ?_
+  · refine lead_le _ ?_
+    rw [Finsupp.mem_support_iff, Finsupp.add_apply, e_apply_self]
+    omega
+  · have hmem := lead_mem (not_aligned_add_e haj hji)
+    rcases eq_or_ne (lead (not_aligned_add_e haj hji)) j with h | h
+    · exact h.ge
+    · refine haj _ ?_
+      rw [Finsupp.mem_support_iff] at hmem ⊢
+      rwa [Finsupp.add_apply, e_apply_of_ne (Ne.symm h), add_zero] at hmem
+
+/-! ### Truncation lemmas -/
+
+theorem trunc_add (d : ℕ) (f g : Poly K n) :
+    trunc d (f + g) = trunc d f + trunc d g := by
+  simp [trunc, Finsupp.filter_add]
+
+theorem trunc_eq_self {d : ℕ} {f : Poly K n} (h : DegLE f d) : trunc d f = f := by
+  refine Finsupp.ext fun c => ?_
+  by_cases hc : c.degree ≤ d
+  · simp [trunc, Finsupp.filter_apply, hc]
+  · have : f c = 0 := by
+      by_contra hne
+      exact hc (h c (Finsupp.mem_support_iff.mpr hne))
+    simp [trunc, Finsupp.filter_apply, hc, this]
+
+theorem trunc_mono_of_lt {d : ℕ} {b : Mon n} (h : d < b.degree) :
+    trunc d (mono b : Poly K n) = 0 := by
+  refine Finsupp.ext fun c => ?_
+  by_cases hc : c.degree ≤ d
+  · have hcb : c ≠ b := by rintro rfl; omega
+    simp [trunc, Finsupp.filter_apply, hc, mono, Finsupp.single_apply, hcb]
+  · simp [trunc, Finsupp.filter_apply, hc]
+
+theorem degree_add_e (a : Mon n) (i : Fin n) : (a + e i).degree = a.degree + 1 := by
+  rw [map_add, degree_e]
+
+/-- The truncation of `act γ i a` below the top degree is exactly the
+"correction term" of (B). -/
+theorem trunc_act (i : Fin n) (a : Mon n) :
+    trunc a.degree (act γ i a) = act γ i a - mono (a + e i) := by
+  have hsplit : act γ i a = mono (a + e i) + (act γ i a - mono (a + e i)) := by abel
+  conv_lhs => rw [hsplit]
+  rw [trunc_add, trunc_mono_of_lt (by rw [degree_add_e]; omega),
+    trunc_eq_self (act_sub_mono_degLE i a), zero_add]
+
+/-- The decomposition of `act γ i a` into its leading monomial and a lower part. -/
+theorem act_eq_mono_add_trunc (i : Fin n) (a : Mon n) :
+    act γ i a = mono (a + e i) + trunc a.degree (act γ i a) := by
+  rw [trunc_act]; abel
+
+/-! ### The aligned case -/
+
+/-- **(C), aligned case.** True by construction, in every degree. -/
+theorem lie_rel_aligned {i j : Fin n} {a : Mon n} (haj : Aligned j a) (hji : j < i) :
+    rho γ i (rho γ j (mono a)) - rho γ j (rho γ i (mono a))
+      = ∑ k : Fin n, γ i j k • act γ k a := by
+  have hna : ¬ Aligned i (a + e j) := not_aligned_add_e haj hji
+  have hlead : lead hna = j := lead_add_e haj hji
+  -- the left-hand term, by the recursive branch of the definition
+  have hsub : (a + e j) - e (lead hna) = a := by
+    rw [hlead]; exact add_tsub_cancel_right a (e j)
+  have hL : rho γ i (rho γ j (mono a)) =
+      mono (a + e i + e j)
+        + rho γ j (trunc a.degree (act γ i a))
+        + ∑ k : Fin n, γ i j k • act γ k a := by
+    rw [rho_mono, act_of_aligned haj, rho_mono, act_of_not_aligned hna]
+    rw [hsub, hlead]
+    rfl
+  -- the right-hand term, by (B) and alignment of `a + eᵢ` with `j`
+  have hajei : Aligned j (a + e i) := by
+    intro k hk
+    rw [Finsupp.mem_support_iff, Finsupp.add_apply] at hk
+    rcases eq_or_ne k i with rfl | hki
+    · exact hji.le
+    · refine haj _ (Finsupp.mem_support_iff.mpr ?_)
+      rwa [e_apply_of_ne (Ne.symm hki), add_zero] at hk
+  have hR : rho γ j (rho γ i (mono a)) =
+      mono (a + e i + e j) + rho γ j (trunc a.degree (act γ i a)) := by
+    rw [rho_mono]
+    conv_lhs => rw [act_eq_mono_add_trunc i a]
+    rw [map_add, rho_mono, act_of_aligned hajei]
+  rw [hL, hR]; abel
+
+/-! ### The general Lie relation -/
+
+/-- **(C).** The commutator of the actions of two basis vectors is the action of
+their bracket. Proved by strong induction on the degree. -/
+theorem lie_rel (i j : Fin n) (a : Mon n) :
+    rho γ i (rho γ j (mono a)) - rho γ j (rho γ i (mono a))
+      = ∑ k : Fin n, γ i j k • act γ k a := by
+  sorry
+
+end Submission.Ado.PBW
