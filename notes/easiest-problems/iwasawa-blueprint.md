@@ -412,3 +412,28 @@ So `L → Module.End K Q` is a faithful finite-dimensional representation, which
 | `PBW/DivMod.lean` | the `Mon n ≃ Restricted × Mon n` bijection of step 2 | 250 |
 | `PBW/Restricted.lean` | step 3: the basis | 200 |
 | `CharP/FiniteRep.lean` | steps 4 and 5, and `adoIwasawa` | 400 |
+
+
+## Update: the characteristic split is already done
+
+`Submission/Ado/CharP/Dispatch.lean` (in the `adoIwasawa` workspace, sorry-free) proves
+
+```lean
+theorem Submission.Ado.hasFaithfulFinRep_of_charP [FiniteDimensional K L]
+    (hp : ∀ (p : ℕ) (_ : Fact p.Prime) (_ : CharP K p), HasFaithfulFinRep K L) :
+    HasFaithfulFinRep K L
+```
+
+so **only the positive-characteristic case remains**. `Submission/Ado/Main.lean`
+(carrying `hasFaithfulFinRep_charZero`) has been copied into the `adoIwasawa`
+workspace as well — it was previously only in `adoCharZero`, and `ChallengeDeps.lean`
+is byte-identical between the two workspaces, so it builds there unchanged.
+
+Note also that `Submission.Ado.HasFaithfulFinRep K L` is *verbatim* the benchmark
+statement, so the final `Submission.lean` needs only
+
+```lean
+theorem adoIwasawa [FiniteDimensional K L] : ... := Submission.Ado.hasFaithfulFinRep_any
+```
+
+exactly as `adoCharZero`'s `Submission.lean` discharges its hole.
