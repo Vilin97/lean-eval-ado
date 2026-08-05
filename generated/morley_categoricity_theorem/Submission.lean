@@ -21,6 +21,9 @@ import Submission.Morley.Rank
 import Submission.Morley.StronglyMinimal
 import Submission.Morley.PrimeBig
 import Submission.Morley.IndepIndisc
+import Submission.Morley.SatExists
+import Submission.Morley.SatTypes
+import Submission.Morley.SatStep
 import Submission.Morley.Ramsey
 
 open Cardinal
