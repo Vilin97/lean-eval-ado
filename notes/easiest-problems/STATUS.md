@@ -12,10 +12,26 @@ representation — is fully formalized in
 40 files and ~7 000 lines, with no `sorry`, no added axiom, no `set_option` and
 no `native_decide`.
 
-**`adoIwasawa`** (the same statement over an arbitrary field) is in progress. Its
-`Submission.lean` still carries the benchmark `sorry`, but ~3 400 lines of entirely
-new theory are proved and pushed — including **the Poincaré–Birkhoff–Witt theorem**,
-which had never been formalized in Lean 4. See "The Iwasawa track" below.
+**`adoIwasawa` is also proved** — the same statement over an *arbitrary* field,
+which strictly subsumes `adoCharZero`. `Submission.lean` no longer carries the
+benchmark `sorry`. Getting there required building **the Poincaré–Birkhoff–Witt
+theorem**, which had never been formalized in Lean 4. See "The Iwasawa track"
+below.
+
+### `adoIwasawa` — verification
+
+Rebuilt from a pristine clone of this repository:
+
+| check | result |
+| --- | --- |
+| `lake build` | **succeeds**, 8 716 jobs |
+| peak RSS | **6.82 GB** |
+| warnings | exactly one: the trusted `Challenge.lean:9:8` `sorry` |
+| `#print axioms adoIwasawa` | `[propext, Classical.choice, Quot.sound]` |
+| `#print axioms Submission.adoIwasawa` | `[propext, Classical.choice, Quot.sound]` |
+| `sorry` / `admit` / `axiom` / `set_option` / `native_decide` in the submission tree | none |
+| `Challenge.lean`, `ChallengeDeps.lean`, `Solution.lean`, `config.json` | byte-identical to the upstream benchmark |
+| size | 59 files, ~11 000 lines |
 
 ## `adoCharZero` — independent verification (2026-08-05)
 
@@ -122,22 +138,28 @@ A second trap, recorded in `pbw-proof.md` §9.2: the Jacobi step must use the
 **cyclic** identity (`lie_jacobi`). Expanding with `lie_lie` twice only proves
 `2 • goal = 0`, which is worthless in characteristic 2.
 
-### Remaining work for `adoIwasawa`
+### How `adoIwasawa` was closed
 
-The route was shortened once the module was in hand; see the final section of
-[`iwasawa-blueprint.md`](iwasawa-blueprint.md). Nothing further is needed about
-`U(L)` — no basis theorem, no freeness, no finite-dimensional quotient of `U(L)`.
-Working entirely inside `Poly K n`:
+The route was shortened once the PBW module was in hand; see the final section of
+[`iwasawa-blueprint.md`](iwasawa-blueprint.md). Nothing about `U(L)` beyond the
+module is needed — no freeness over `K[c₁,…,cₙ]`, no finite-dimensional quotient
+of `U(L)`. Working entirely inside `Poly K n`:
 
-1. `PBW/Pow.lean` — triangularity of `ρ(xⱼ)^k` and of the operators `Cⱼ` by which
-   the central `p`-polynomials act;
-2. `PBW/DivMod.lean` — the bijection `Mon n ≃ {b : ∀ j, bⱼ < q} × Mon n` given by
+1. `PBW/Pow.lean` — triangularity of `ρ(xⱼ)^k`, and of the operators `Cⱼ` by which
+   the central `p`-polynomials act: `C^m (z^b) = z^(b+q·m) + lower`;
+2. `PBW/PowComm.lean` — word products of the `Cⱼ` are order-independent, because
+   the underlying `cⱼ` are central; hence `Cⱼ ∘ C^m = C^(m+eⱼ)`;
+3. `PBW/DivMod.lean` — the bijection `Mon n ≃ {b : ∀ j, bⱼ < q} × Mon n` given by
    division with remainder;
-3. `PBW/Restricted.lean` — the resulting unitriangular basis of `Poly K n`;
-4. `CharP/FiniteRep.lean` — `Q := Poly K n / Σⱼ Cⱼ(Poly K n)` is finite-dimensional
-   of dimension `q^n`, `L` acts on it because the `Cⱼ` are central, and the action
-   is faithful because a degree-one element cannot lie in the span of the `m ≠ 0`
-   part of the basis.
+4. `PBW/Restricted.lean` — the resulting unitriangular basis of `Poly K n`, and the
+   **separation lemma**: a `K`-combination of `z₁, …, zₙ` lying in `∑ⱼ range Cⱼ` is
+   zero;
+5. `CharP/FiniteRep.lean` — `Q := Poly K n / ∑ⱼ range Cⱼ` is finite-dimensional
+   (spanned by the finitely many restricted monomials), `L` acts on it because the
+   `Cⱼ` commute with the action, and the action is faithful by the separation
+   lemma applied to `ρ(x)(z⁰) = ∑ᵢ (repr x)ᵢ zᵢ`. Together with
+   `CharP/Dispatch.lean` this gives `hasFaithfulFinRep_any`, which discharges the
+   benchmark hole.
 
 ## Findings worth reporting upstream to `leanprover/lean-eval`
 
