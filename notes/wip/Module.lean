@@ -34,7 +34,7 @@ theorem rhoL_apply (bas : Module.Basis (Fin n) K L) (x : L) :
 @[simp] theorem rhoL_basis (bas : Module.Basis (Fin n) K L) (i : Fin n) :
     rhoL bas (bas i) = rho (gamma bas) i := by
   rw [rhoL_apply]
-  simp [Module.Basis.repr_self, Finsupp.single_apply, Finset.sum_ite_eq']
+  simp [Module.Basis.repr_self, Finsupp.single_apply]
 
 /-- The bracket of two basis vectors acts through the structure constants. -/
 theorem rhoL_lie_basis (bas : Module.Basis (Fin n) K L) (i j : Fin n) :
