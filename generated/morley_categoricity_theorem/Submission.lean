@@ -18,6 +18,7 @@ import Submission.Morley.Assembly
 import Submission.Morley.PrimeExists
 import Submission.Morley.OmegaTwoCardinal
 import Submission.Morley.Rank
+import Submission.Morley.StronglyMinimal
 import Submission.Morley.Ramsey
 
 open Cardinal
