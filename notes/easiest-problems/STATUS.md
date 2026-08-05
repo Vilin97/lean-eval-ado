@@ -41,10 +41,17 @@ Rebuilt from scratch in a clean workspace against the pinned toolchain
 `config.json` permits exactly `propext`, `Quot.sound`, `Classical.choice`, so
 the axiom footprint is inside the allowance.
 
-## Submission
+## Submission — accepted
 
 * Issue [leanprover/lean-eval-submissions#945](https://github.com/leanprover/lean-eval-submissions/issues/945),
   filed 2026-08-05, pointing at commit `00c64353` of this repository.
+  **Comparator verdict: `adoCharZero`: pass.** Recorded in
+  `results/vilin97.json` under model `Opus-5`, and live on
+  <https://lean-lang.org/eval/>: the `adoCharZero` row of the coverage matrix
+  has exactly one solved cell out of 54, and the model page reads *"Problems
+  uniquely solved by this model: Ado's theorem in characteristic zero"*.
+  (`adoIwasawa` was attempted in the same run and correctly failed — its
+  `Submission.lean` still carries the benchmark `sorry`.)
 * Issue #944 was the same submission filed through the API; the API silently
   drops the `submission` label for non-collaborators, so the evaluation
   workflow never fired. It was closed and re-filed through the issue template.
