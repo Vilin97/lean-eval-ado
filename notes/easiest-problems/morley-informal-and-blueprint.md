@@ -308,3 +308,106 @@ infrastructure: Ado's missing pieces (PBW, Casimir, Levi) are textbook algebra
 with a clear Lean shape, whereas the type-counting and two-cardinal arguments
 involve set-theoretic constructions that are notoriously fiddly to formalise.
 That is why Morley is ranked third rather than first.
+
+---
+
+# Target selection, second pass (2026-08-05)
+
+`adoCharZero` and `adoIwasawa` are both solved (issues #945 and #947). Of the
+60 problems still unsolved, `honeycomb_connective_constant` is owned by another
+agent, so it is excluded here.
+
+## Re-triage result
+
+An exhaustive re-read of all remaining `Challenge.lean` statements and their
+`ChallengeDeps` found **no exploitable weak formalisation**. Specifically
+checked and confirmed faithful:
+
+* `two_ninety_theorem` — `Integral M` is the *integer-valued* condition, which
+  is the correct hypothesis for 290 (not 15); the proof also depends
+  transitively on Deligne, i.e. on `ramanujan_petersson`, another unsolved
+  problem in the same list. Rank it last.
+* `mandelbar_not_path_connected` — `IsPathConnected ∅` is false in Mathlib, so
+  an empty locus would be a free win, but `0 ∈ Mandelbar` closes it.
+* `bourgain_polynomial_ergodic` — `F` carries no measurability constraint, so
+  the statement reduces to bare a.e. convergence, which is still exactly
+  Bourgain's theorem.
+* `linnik` — `p a d = sInf ∅ = 0` on an empty set, but Dirichlet makes it
+  nonempty; `L = 5.5` is genuine.
+* `poincare_3d_*`, `sphere_theorem_*` — `SimplyConnectedSpace` does not admit
+  the empty space (there is a priority-100 `PathConnectedSpace` instance), so
+  the statements are true, merely unreachable.
+* `pardon_torus_knot_distortion` — `standardTorusCurve p q` is a genuine knot
+  for all coprime `p, q ≥ 1`; no vacuity.
+
+## `hadwiger` is now solvable (was not)
+
+Benchmark commit `bd3dc87` ("fix: prove the valuations submodule closure fields
+in Hadwiger", #507) discharges the `add_mem'`/`zero_mem'`/`smul_mem'` fields
+that were `sorry`. `generated/hadwiger/ChallengeDeps.lean` on `main` is now
+clean, so the `sorryAx` obstruction recorded in [`SURVEY.md`](SURVEY.md) is
+gone. Note CI scores against `lean-eval@main` HEAD at evaluation time, so this
+takes effect immediately. The other four `sorry`-tainted problems
+(`conway_knot_*`, `exists_topologically_slice_not_smoothly_slice`,
+`derived_solidification_free_CW_homology`) turn out to be clean too — their
+`sorry` hits are in docstrings or are the problems' own declared holes.
+
+## Prior-art sweep: nothing to port
+
+Unlike Ado — where `Komyyy/ado` supplied the whole nilpotent case — there is no
+prior art for any of the remaining candidates:
+
+* **Whitney (strong, 2n)** — Mathlib has only
+  `exists_embedding_euclidean_of_compact`, compact-only with **no dimension
+  bound**; its own TODO says the weak `2n+1` form needs Sard, and Mathlib's
+  Sard is only the equidimensional
+  `addHaar_image_eq_zero_of_det_fderivWithin_eq_zero`. No transversality, no
+  submanifolds, no tubular neighbourhoods.
+* **Both sphere theorems** — Mathlib has *no curvature of any kind*:
+  `sectionalCurvature`, `RicciCurvature`, `LeviCivita` all return zero hits.
+  Metric compatibility and torsion-freeness exist
+  (`CovariantDerivative.IsMetricCompatible`, `IsCovariantDerivativeOn.torsion`)
+  but the connection is never constructed.
+* **`hilbert_smith_padic_dimension_three`** — `google-deepmind/formal-conjectures`
+  has the exact statement in `FormalConjectures/HilbertProblems/5.lean`
+  (Apache-2.0) but it is `sorry`, as are all its variants.
+* **`weinstein_conjecture_dim3`** — no contact or symplectic manifolds anywhere;
+  `urkud/DeRhamCohomology` is stale (14 months), has 40 sorries, and defines no
+  cohomology group despite its name.
+* **`pi_succ_sphere_n_mulEquiv_zmod_two`** — Mathlib has `HomotopyGroup.Pi` and
+  its group instances and *nothing else*; `π_n(S^n) ≅ ℤ` is an explicit TODO in
+  the file, and `π₁(S¹) ≅ ℤ` is likewise absent. π₄(S³) ≅ ℤ/2 exists only in
+  Cubical Agda; the Lean 2 HoTT library has `πnSn` and Freudenthal but is a dead
+  language and not portable.
+* **`equichordal_point_unique`** — zero hits anywhere.
+
+A large family of GitHub hits under the `HautevilleHouse` account (16,659 public
+repos, created 2025-10-20) is machine-generated and mathematically vacuous —
+"theorems" that project their own hypothesis fields, undefined imports, code
+that does not parse. Ignore it.
+
+## Decision: `morley_categoricity_theorem`
+
+Chosen over `g2_irrep_tensor_square_decomp` on risk shape rather than size.
+
+The g₂ route got materially cheaper with the discovery that Mathlib contains
+the **Geck construction** (`LinearAlgebra/RootSystem/GeckConstruction/`, 1654
+lines): an explicit finite-dimensional Lie algebra from a root system, with
+`HasTrivialRadical`, `IsIrreducible`, `LieAlgebra.Basis` and `span_ef = ⊤`.
+Because `span_ef = ⊤` makes the comparison map `g₂ ℂ → Geck` *surjective*, the
+submodule lattice and hence `isotypicComponents` transport without needing
+injectivity — so Serre's theorem proper is never required. The Casimir element
+and Weyl complete reducibility proved for Ado sit directly on that path.
+
+But g₂ ends in an explicit 14-component decomposition of a 4096-dimensional
+module with `native_decide` forbidden and no fallback if it blows up. Morley
+has no step that can time out, and its missing chapters are largely
+independent, which suits parallel agents.
+
+Mathlib's `ModelTheory/` base is load-bearing, not decorative: compactness via
+ultraproducts and Łoś, both Löwenheim–Skolem directions, Skolemization,
+Tarski–Vaught, `DirectLimit`, `PartialEquiv` back-and-forth, and a **Stone
+topology on `CompleteType` already proved compact, totally separated and
+Baire** — the last of which may shortcut both the Cantor-set dichotomy in the
+ω-stability chapter and the omitting-types theorem. The benchmark's
+`Cardinal.{0}` / `ModelType.{0,0,0}` restriction removes all universe lifting.
