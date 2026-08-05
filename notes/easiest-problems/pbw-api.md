@@ -124,6 +124,28 @@ This is the abstract engine behind both the PBW basis of `U(L)` (index map the
 identity on `Mon n`) and the restricted basis used in characteristic `p` (index map
 `(b, m) ↦ b + q·m`).
 
+## The Poincaré–Birkhoff–Witt theorem — `PBW/Basis2.lean`
+
+```
+pbwMonomial bas a := ((List.finRange n).map fun i => (ι K (bas i)) ^ a i).prod
+  -- the ordered monomial; `Finset.prod` will not do, since `U(L)` is noncommutative
+  -- and `Finset.prod` demands `CommMonoid`
+
+ev_pbwMonomial_sub_mono   : DegLT (ev bas (pbwMonomial bas a) - mono a) a.degree
+unitriangular_ev_pbwMonomial : Unitriangular id fun a => ev bas (pbwMonomial bas a)
+sorted_prod_eq_pbwMonomial : l.Pairwise (· ≤ ·) →
+    (l.map fun i => ι K (bas i)).prod = pbwMonomial bas (monOfList l)
+
+linearIndependent_pbwMonomial : LinearIndependent K (pbwMonomial bas)
+span_range_pbwMonomial        : Submodule.span K (Set.range (pbwMonomial bas)) = ⊤
+pbwBasis bas : Module.Basis (Mon n) K (UniversalEnvelopingAlgebra K L)
+pbwBasis_apply : pbwBasis bas a = (List.ofFn fun i => (ι K (bas i)) ^ a i).prod
+```
+
+Non-vacuity, checked in [`pbw-basis-checks.lean`](pbw-basis-checks.lean): for `n ≥ 1`
+it follows that `¬ Module.Finite K (U(L))`, since the basis is indexed by the
+infinite set `Mon n`.
+
 ## Ordered monomials span — `PBW/Sorting.lean`
 
 For `b : Fin n → L` spanning `L`:

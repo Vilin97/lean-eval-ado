@@ -13,8 +13,9 @@ representation — is fully formalized in
 no `native_decide`.
 
 **`adoIwasawa`** (the same statement over an arbitrary field) is in progress. Its
-`Submission.lean` still carries the benchmark `sorry`, but a substantial and
-entirely new body of theory is proved and pushed — see "The Iwasawa track" below.
+`Submission.lean` still carries the benchmark `sorry`, but ~3 400 lines of entirely
+new theory are proved and pushed — including **the Poincaré–Birkhoff–Witt theorem**,
+which had never been formalized in Lean 4. See "The Iwasawa track" below.
 
 ## `adoCharZero` — independent verification (2026-08-05)
 
@@ -92,6 +93,11 @@ depends only on `[propext, Classical.choice, Quot.sound]`**:
 | `PBW/Injective.lean` | 72 | **`ι : L → U(L)` is injective** for every finite-dimensional Lie algebra over a field |
 | `PBW/Unitriangular.lean` | 134 | unitriangular families are linearly independent, and span |
 | `PBW/Sorting.lean` | 282 | the spanning half of PBW: ordered monomials span `U(L)` |
+| `PBW/Basis2.lean` | 379 | **the Poincaré–Birkhoff–Witt theorem**: `pbwBasis bas : Module.Basis (Mon n) K (U(L))`, the ordered monomials `∏ᵢ ι(xᵢ)^{aᵢ}` |
+| `PBW/Pow.lean` | 424 | triangularity of `ρ(xⱼ)^k` and of the operators `Cⱼ` by which the central `p`-polynomials act |
+| `PBW/DivMod.lean` | 176 | the bijection `Mon n ≃ {b : ∀ j, bⱼ < q} × Mon n` by division with remainder |
+| `CharP/FiniteQuotient.lean` | 474 | `U(L)` modulo a two-sided ideal containing the `p`-polynomial relations is **finite-dimensional** (needs only the spanning half of PBW) |
+| `CharP/Dispatch.lean` | 33 | reduces Ado–Iwasawa to the positive-characteristic case |
 | `CharP/AdPow.lean` | 128 | `ad(a)^{pⁱ} = ad(a^{pⁱ})` in characteristic `p` |
 | `CharP/Central.lean` | 304 | `p`-polynomial relations for endomorphisms, and the resulting **central elements of `U(L)`** |
 
