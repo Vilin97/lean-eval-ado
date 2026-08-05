@@ -146,19 +146,37 @@ Let `P := MvPolynomial (Fin n) K`, with monomial basis `z^a` indexed by
 `i ≤ a` for `∀ j ∈ a.support, i ≤ j`. Let `P_{≤m}` be the span of the `z^a`
 with `|a| ≤ m`. Write `⁅x_i, x_j⁆ = Σ_k γ_{ijk} x_k`.
 
-**Construction 3.2.** Define `act : Fin n → (Fin n →₀ ℕ) → P` by well-founded
-recursion on `|a|`:
+**Construction 3.2.** Write `ρ(x)` for the operator `f ↦ x · f`. The recursion
+is *Humphreys'*, and getting it right is the whole game:
 
 ```
-act i a = if i ≤ a then z_i * z^a
-          else  let j := min a.support   -- j < i, and j ≤ a - e_j
-                z_j * (act i (a - e_j)) + Σ_k γ_{ijk} * act k (a - e_j)
+ρ(x_i) z^a = z_i z^a                                  if i ≤ a
+ρ(x_i) z^a = ρ(x_j)(ρ(x_i) z^b) + ρ(⁅x_i, x_j⁆) z^b   otherwise,
+                                    where j := min supp a, b := a − e_j
 ```
 
-Both recursive calls have argument of degree `|a| − 1`, so this is structural
-recursion on `|a|` — **no lexicographic measure is needed**, which is the one
-piece of good news about this construction. Extend to `L →ₗ[K] P →ₗ[K] P` by
-linearity in both arguments.
+**The naive variant `z_j · (ρ(x_i) z^b) + ρ(⁅x_i,x_j⁆) z^b` — multiplying by
+`z_j` instead of applying `ρ(x_j)` — is wrong**, and Lemma 3.5 does not close
+for it. (I tried; see the failure of Claim (T) below.) The two agree on the
+leading term only.
+
+*Well-foundedness.* In the second branch `ρ(x_j)` is applied to `ρ(x_i) z^b`,
+which by (B) has degree `≤ |b| + 1 = |a|`, so a literal transcription is not
+decreasing. Split off the leading term instead: by (B),
+`ρ(x_i) z^b = z^{b+e_i} + w` with `deg w ≤ |b|`, and `j ≤ b + e_i` (because
+`j ≤ b` and `j < i`), so `ρ(x_j) z^{b+e_i} = z^{b+e_i+e_j}` by (A). Define
+
+```
+ρ(x_i) z^a := z^{b+e_i+e_j}
+              + Σ_{c ∈ supp(ρ(x_i) z^b), |c| ≤ |b|} (coeff c) • ρ(x_j) z^c
+              + Σ_k γ_{ijk} • ρ(x_k) z^b
+```
+
+Now every recursive call is on a monomial of degree `< |a|`, so this is
+well-founded recursion on `a.sum`, implementable in Lean with
+`Finset.attach` to carry the membership proof that supplies the decrease.
+Lemma 3.4 (B) then shows the truncated sum is exactly `ρ(x_j) w`, so the
+definition really is Humphreys'.
 
 **Lemma 3.3 (A).** `i ≤ a → x_i · z^a = z_i z^a`. Immediate from the first
 branch.
@@ -168,37 +186,81 @@ branch.
 **Lemma 3.5 (C).** `x · (y · f) − y · (x · f) = ⁅x, y⁆ · f` for all `x, y ∈ L`,
 `f ∈ P`.
 
-This is the hard lemma, by induction on `|a|` with `f = z^a`, `x = x_i`,
-`y = x_j`, `i > j` (the case `i = j` is trivial and the statement is
-antisymmetric).
+By bilinearity it suffices to take `x = x_i`, `y = x_j`, `f = z^a`. The
+statement is antisymmetric in `(i, j)` and trivial for `i = j`, so assume
+`i > j`.
 
-*Case `j ≤ a`.* Then `x_j · z^a = z_j z^a = z^{a+e_j}`, and `j = min supp(a+e_j)`
-while `i > j` means the second branch of the definition applies to
-`x_i · z^{a+e_j}`, giving exactly
+**Lemma 3.5a (the aligned case — no induction needed).** If `i > j` and
+`j ≤ a`, then `ρ(x_i)ρ(x_j) z^a = ρ(x_j)ρ(x_i) z^a + ρ(⁅x_i,x_j⁆) z^a`.
+
+*Proof.* `ρ(x_j) z^a = z^{a+e_j}` by (A). Now `min supp(a+e_j) = j` and
+`i > j` means `¬ (i ≤ a+e_j)`, so the **second branch of the definition applies
+verbatim** with `b = (a+e_j) − e_j = a`, i.e.
+`ρ(x_i) z^{a+e_j} = ρ(x_j)(ρ(x_i) z^a) + ρ(⁅x_i,x_j⁆) z^a`. That is the claim.
+∎
+
+This is exactly why the recursion must be written with `ρ(x_j)` and not with
+`z_j ·` : with the right definition the hard case of (C) is *true by
+construction*, in every degree, with no induction at all.
+
+**Lemma 3.5b (the general case).** By strong induction on `d = |a|`; the
+induction hypothesis is that (C) holds for **all** `x, y ∈ L` on every `f` of
+degree `≤ d − 1`.
+
+If `j ≤ a` we are done by 3.5a. Otherwise put `j' := min supp a`, so
+`j' < j < i` and `j' ≤ b` where `b := a − e_{j'}`, `|b| = d − 1`, and
+`z^a = ρ(x_{j'}) z^b` by (A).
+
+First, the pair `(i, j')` commutes correctly on `ρ(x_j) z^b`, and the pair
+`(j, j')` on `ρ(x_i) z^b`: decompose `ρ(x_j) z^b = z^{b+e_j} + w` with
+`deg w ≤ d − 1` (B). On `w` use the induction hypothesis; on the monomial
+`z^{b+e_j}` use 3.5a, whose hypothesis `j' ≤ b + e_j` holds since `j' ≤ b` and
+`j' < j`. Same for `ρ(x_i) z^b = z^{b+e_i} + w'`, using `j' < i`.
+
+Now expand, writing `ρ_i` for `ρ(x_i)`:
 
 ```
-x_i · (x_j · z^a) = z_j · (x_i · z^a) + ⁅x_i, x_j⁆ · z^a.
+ρ_i ρ_j z^a − ρ_j ρ_i z^a
+  = ρ_i (ρ_{j'} ρ_j z^b + ρ(⁅x_j,x_{j'}⁆) z^b)        (IH on z^b, degree d−1)
+  − ρ_j (ρ_{j'} ρ_i z^b + ρ(⁅x_i,x_{j'}⁆) z^b)
+  = ρ_{j'} (ρ_i ρ_j − ρ_j ρ_i) z^b
+  + (ρ(⁅x_i,x_{j'}⁆) ρ_j − ρ_j ρ(⁅x_i,x_{j'}⁆)) z^b
+  + (ρ_i ρ(⁅x_j,x_{j'}⁆) − ρ(⁅x_j,x_{j'}⁆) ρ_i) z^b
+  = ρ_{j'} ρ(⁅x_i,x_j⁆) z^b + ρ(⁅⁅x_i,x_{j'}⁆,x_j⁆) z^b + ρ(⁅x_i,⁅x_j,x_{j'}⁆⁆) z^b
 ```
 
-So the case reduces to `x_j · (x_i · z^a) = z_j · (x_i · z^a)`, i.e. to showing
-that `x_j` acts as multiplication by `z_j` on `x_i · z^a`. That is *not*
-automatic and is where the induction has to be strengthened; see "risk" below.
+using the induction hypothesis three more times on `z^b`. The target is
 
-*Case `¬ (j ≤ a)`.* Put `j' := min supp a`, so `j' < j < i`. Then
-`z^a = z_{j'} z^b = x_{j'} · z^b` with `b := a − e_{j'}` and `j' ≤ b`, so one may
-rewrite `z^a` as `x_{j'} · z^b` and apply the induction hypothesis (C) in degree
-`|b| = |a| − 1` twice, together with the Jacobi identity, to reduce to the first
-case.
+```
+ρ(⁅x_i,x_j⁆) z^a = ρ(⁅x_i,x_j⁆) ρ_{j'} z^b
+                 = ρ_{j'} ρ(⁅x_i,x_j⁆) z^b + ρ(⁅⁅x_i,x_j⁆,x_{j'}⁆) z^b
+```
 
-**Risk.** Lemma 3.5 is the classical sticking point (Humphreys §17.4, Jacobson
-Ch. V). The naive induction does *not* close: in the first case one needs
-`x_i · z^a` to lie in the span of `z^c` with `j ≤ c`, and that fails as soon as
-`⁅x_i, x_{j'}⁆` has a component on some `x_k` with `k < j`. The fix in the
-literature is to run (A), (B), (C) as a *simultaneous* induction on the degree
-bound `m`, where (C) is only asserted for `|a| ≤ m − 1` while (A) and (B) are
-asserted for `|a| ≤ m`, and to do the first case by a nested induction on `|a|`.
-Budget the bulk of the implementation time here, and prove it on paper before
-writing Lean.
+(again the induction hypothesis, for the pair `(⁅x_i,x_j⁆, x_{j'})`). Subtracting,
+the difference is `ρ(J) z^b` with
+
+```
+J = ⁅⁅x_i,x_{j'}⁆,x_j⁆ + ⁅x_i,⁅x_j,x_{j'}⁆⁆ − ⁅⁅x_i,x_j⁆,x_{j'}⁆
+  = ⁅⁅x_i,x_{j'}⁆,x_j⁆ + ⁅⁅x_{j'},x_j⁆,x_i⁆ + ⁅⁅x_j,x_i⁆,x_{j'}⁆
+  = 0
+```
+
+by the Jacobi identity. ∎
+
+**Where the naive definition fails**, recorded so it is not re-attempted: with
+`z_j ·` in place of `ρ(x_j)`, case 3.5a reduces to `ρ(x_j)(ρ(x_i) z^a) =
+z_j · (ρ(x_i) z^a)`, which would need
+
+> Claim (T): `j ≤ a` and `j ≤ i` imply `ρ(x_i) z^a ∈ span{z^c : j ≤ c}`.
+
+Claim (T) is **false**: in the recursive branch the term
+`ρ(⁅x_i,x_{j'}⁆) z^b` contributes `ρ(x_k) z^b` for every `k` with
+`γ_{i j' k} ≠ 0`, and such a `k` may be `< j`, producing a monomial `z^{b+e_k}`
+with `¬ (j ≤ b+e_k)`.
+
+**Nowhere** does any of this use `char K = 0`, or that `K` is a field rather
+than a commutative ring — only that `L` is free as a `K`-module with a totally
+ordered basis.
 
 **Theorem 3.6 (PBW).** The map `ev : U(L) → P`, `u ↦ u · 1`, is a `K`-linear
 isomorphism carrying the ordered monomial `ι(x)^a` to `z^a + (terms of degree
