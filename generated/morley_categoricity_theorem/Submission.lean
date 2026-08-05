@@ -3,6 +3,7 @@ import Submission.Helpers
 import Submission.Morley.Port.All
 import Submission.Morley.Indiscernibles
 import Submission.Morley.Omitting
+import Submission.Morley.Stable
 import Submission.Morley.Ramsey
 
 open Cardinal
