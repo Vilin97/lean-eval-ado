@@ -9,6 +9,7 @@ import Submission.Morley.Vaught
 import Submission.Morley.Saturated
 import Submission.Morley.EM
 import Submission.Morley.TwoCardinal
+import Submission.Morley.Transfer
 import Submission.Morley.Ramsey
 
 open Cardinal
