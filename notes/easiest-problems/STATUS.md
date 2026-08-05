@@ -1,115 +1,148 @@
 # Status
 
-Last updated: 2026-08-04.
+Last updated: 2026-08-05.
 
-## Honest summary
+## Summary
 
-**None of the three targets is solved, and none is close.** What exists is the
-survey that selected them, complete informal proofs, dependency-ordered Lean
-blueprints, and 757 compiling, axiom-clean lines of the Ado development out of
-an estimated 8 000–10 500. Nothing is submittable, so nothing appears on the
-leaderboard.
+**`adoCharZero` is proved, independently verified, and submitted.**
 
-The estimate that matters: `adoCharZero` needs the Poincaré–Birkhoff–Witt
-theorem, the Casimir element, Weyl's complete reducibility theorem, Whitehead's
-first lemma, and the Levi decomposition. Mathlib has **none** of these — I
-checked each by reading the source; `Mathlib/Algebra/Lie/Free.lean:36` and
-`Mathlib/Algebra/Lie/SerreConstruction.lean:46` both explicitly record that PBW
-is missing, and `Mathlib/Algebra/Lie/Cochain.lean` carries a
-`TODO: coboundaries, cohomology`. That is a multi-month project, not a
-single-session one. The same is true of the other 59 unsolved problems; see
-[`SURVEY.md`](SURVEY.md) for the triage.
+Ado's theorem in characteristic zero — every finite-dimensional Lie algebra over
+a field of characteristic zero admits a faithful finite-dimensional
+representation — is fully formalized in
+[`generated/adoCharZero/Submission/`](../../generated/adoCharZero/Submission),
+40 files and ~7 000 lines, with no `sorry`, no added axiom, no `set_option` and
+no `native_decide`.
 
-## What is verified
+`adoIwasawa` (the same statement over an arbitrary field) is **not** proved; its
+`Submission.lean` still carries the benchmark `sorry`. It shares every file with
+`adoCharZero` except `Main.lean` and needs §7 of
+[`ado-informal.md`](ado-informal.md) on top: the full Poincaré–Birkhoff–Witt
+theorem (including the linear-independence half, which the characteristic-zero
+route deliberately avoids), restricted Lie algebras, the restricted PBW theorem
+and the finite-dimensional `p`-envelope.
 
-| file | lines | contents | build |
-| --- | --- | --- | --- |
-| `generated/adoCharZero/Submission/Ado/Basic.lean` | 105 | §0 reductions: `HasFaithfulFinRep`, direct sums of representations, `ad` kills exactly the centre, and the reduction of Ado to "faithful on the centre" | clean, no warnings |
-| `generated/adoCharZero/Submission/Ado/DerivRep.lean` | 146 | §4 engine: `IsDeriv`, `⁅D, mulLeft a⁆ = mulLeft (D a)`, `⁅mulLeft a, mulLeft b⁆ = mulLeft (a*b - b*a)`, the combined representation `x ↦ mulLeft (f x) + D x` with its exact Lie-morphism criterion, and its kernel criterion | clean, no warnings |
-| `generated/adoCharZero/Submission/Ado/Easy.lean` | 70 | **Ado's theorem proved in two complete special cases**: trivial centre (`ad` is faithful) and abelian (explicit `(dim L + 1)`-dimensional representation on `K × L`). Both hold over any field. | clean, no warnings |
-| `generated/adoCharZero/Submission/Ado/Embed.lean` | 86 | Ado's property for `L` **iff** `L` embeds into a finite-dimensional associative `K`-algebra with brackets going to ring commutators. This is the bridge both constructive halves cross at the end (§3 with `U(N)/J(N)^k`, §7 with `u(𝔤̂)`). | clean, no warnings |
-| `generated/adoCharZero/Submission/Ado/Closure.lean` | 63 | Ado's property is inherited along injective Lie morphisms (so passes to subalgebras — the §7 descent from the `p`-envelope) and is stable under products; plus **Ado for Lie algebras with trivial radical**, in particular semisimple ones. | clean, no warnings |
-| `generated/adoCharZero/Submission/Ado/Filtration.lean` | 129 | The degree filtration on `U(L)`: `ι '' L` generates `U(L)` as an algebra (`adjoin_range_ι_eq_top`, by the retraction argument through the universal property), `⨆ j, gen ^ j = ⊤`, and each `gen ^ j` is finite-dimensional. **This is the spanning half of PBW, and it does not need the basis theorem.** | clean, no warnings |
-| `generated/adoCharZero/Submission/Ado/Truncation.lean` | 82 | **`U(L) ⧸ J(L)^k` is finite-dimensional.** `filt k ⊔ augPow k = ⊤` splits `U(L)` into low degree and degree `≥ k`, and the quotient is the image of the finite-dimensional `filt k`. This is one of the two ingredients of Birkhoff's embedding theorem, and it needs no PBW basis theorem. | clean, no warnings |
+## Independent verification (2026-08-05)
 
-| `generated/adoCharZero/Submission/Ado/AugIdeal.lean` | 78 | `augPow k` is a two-sided ideal and the filtration is multiplicative (`augPow k * augPow l ≤ augPow (k+l)`) and antitone. These are the submodule-level facts under Lemma 4.4, where a derivation with `D L ⊆ N` is shown to preserve `augPow k`. | clean, no warnings |
+Rebuilt from scratch in a clean workspace against the pinned toolchain
+(`leanprover/lean4:v4.32.2`) and the pinned Mathlib
+(`905b95818eb32af7874a58b427f50c1711a5e96c`):
 
-All eight files are mirrored into `generated/adoIwasawa/Submission/Ado/`. Total
-757 lines.
+| check | result |
+| --- | --- |
+| `lake build` | **succeeds**, 8 701 jobs, 61 s wall |
+| peak RSS | **6.83 GB** |
+| warnings | exactly one: `Challenge.lean:9:8: declaration uses 'sorry'` — the *trusted* benchmark statement, which is supposed to be a `sorry`. No warning anywhere in `Submission.lean` or `Submission/`. |
+| `#print axioms Submission.adoCharZero` | `[propext, Classical.choice, Quot.sound]` |
+| `#print axioms adoCharZero` (from `Solution.lean`) | `[propext, Classical.choice, Quot.sound]` |
+| `#print axioms Submission.Ado.exists_levi_subalgebra'` | `[propext, Classical.choice, Quot.sound]` |
+| `sorry` / `admit` / `axiom` / `set_option` / `native_decide` in the submission tree | none |
+| `Challenge.lean`, `ChallengeDeps.lean`, `Solution.lean` | byte-identical to `leanprover/lean-eval@cd57190` |
 
-Birkhoff's theorem (§3) is now down to a single missing input: `N ∩ J(N)^k = ⊥`
-for `k ≥ 2`, i.e. the *injectivity* half of PBW. Everything else it needs is
-proved.
+`config.json` permits exactly `propext`, `Quot.sound`, `Classical.choice`, so
+the axiom footprint is inside the allowance.
 
-`#print axioms` on every proved declaration gives exactly
-`[propext, Classical.choice, Quot.sound]` — no `sorryAx`, so these results
-would pass comparator's axiom check as they stand.
+## Submission
 
-`lake build Submission` in both `generated/adoCharZero` and
-`generated/adoIwasawa` succeeds with exactly one warning, the intended `sorry`
-on the benchmark theorem itself. No `set_option`, no `native_decide`, no added
-axioms.
+* Issue [leanprover/lean-eval-submissions#945](https://github.com/leanprover/lean-eval-submissions/issues/945),
+  filed 2026-08-05, pointing at commit `00c64353` of this repository.
+* Issue #944 was the same submission filed through the API; the API silently
+  drops the `submission` label for non-collaborators, so the evaluation
+  workflow never fired. It was closed and re-filed through the issue template.
 
-`lieHomOfMulLeftAddDeriv` is worth singling out: it isolates, as a single
-verified criterion, the precise obstruction that makes Ado's theorem hard. A
-representation `x ↦ mulLeft (f x) + D x` is a Lie morphism iff `D` is a Lie
-morphism **and**
+## Mathlib gaps filled
 
+All of the following were absent from Mathlib and from Mathlib master, and a
+scout found no Lean 4 implementation anywhere (Lean Pool, Tau Ceti, Formal
+Conjectures, GitHub code search). Mathlib's own `docs/1000.yaml` records Ado's
+theorem and PBW as unformalized.
+
+| ingredient | file | notes |
+| --- | --- | --- |
+| classical Lie nilradical | `Ado/Nilradical.lean` | Mathlib's `maxNilpotentIdeal` is the *module*-nilpotent notion and evaluates to `⊥` on the two-dimensional non-abelian algebra |
+| `⁅L, L⁆ ⊓ rad L` is nilpotent | `Ado/DerivedRadical.lean` | via Lie's theorem plus Engel |
+| Casimir element | `Ado/Casimir.lean` | built on the Killing complement of the trace-form radical, since the trace form is degenerate in general; needs a module form of Cartan's criterion, proved here as `lie_eq_zero_of_traceForm_eq_zero` |
+| Weyl complete reducibility | `Ado/Weyl.lean` | via the Fitting decomposition `M = ker cᵏ ⊕ im cᵏ`, avoiding Schur's lemma and quotient modules |
+| Whitehead's first lemma | `Ado/Levi.lean` | |
+| **Levi decomposition** | `Ado/Levi.lean` (`exists_levi_subalgebra'`) | |
+| extension of a Lie derivation to `U(L)` | `Ado/EnvDeriv.lean` | via the trivial square-zero extension |
+| degree filtration on `U(L)`, `U(L)/J^k` finite-dimensional | `Ado/Filtration.lean`, `Ado/Truncation.lean` | the *spanning* half of PBW; the basis theorem is never needed |
+| the solvable case | `Ado/Solvable.lean` | |
+
+Prior work reused, with attribution: the abelian and nilpotent cases
+(`Submission/Ado/Port/`) are a mechanical port of
+<https://github.com/Komyyy/ado> by Miyahara Kō, Apache 2.0. Attribution is
+carried in the header of every ported file.
+
+## Why PBW is not needed in characteristic zero
+
+`Ado/PBW/Basis.lean` records the discovery that closed the project: the
+linear-independence half of PBW is unnecessary. The port replaces the PBW basis
+by an explicit filtration of the tensor algebra, so only the spanning half —
+available here as `Submission.Ado.iSup_gen_pow_eq_top` — is used, and
+faithfulness comes from the induction hypothesis instead of injectivity of `ι`.
+
+The same file records that the originally planned lemma
+
+```lean
+theorem ι_notMem_genPow_two {x : L} (h : ι K x ∈ gen K L ^ 2) : x = 0
 ```
-f ⁅x, y⁆ = f x * f y - f y * f x + D x (f y) - D y (f x).
-```
 
-Taking `f` to be the inclusion of a vector-space complement and `D = ad`, that
-second condition holds automatically on `𝔞 × 𝔞` and on `𝔞 × 𝔪` but fails on
-`𝔪 × 𝔪` unless `𝔪` is a subalgebra — which is exactly why the proof has to
-proceed one dimension at a time (§5) or along a Levi complement (§6), and why
-Levi's theorem cannot be dodged.
+is **false** for every non-abelian `L`, since `ι ⁅x, y⁆ = ι x * ι y - ι y * ι x`
+already lies in `gen K L ^ 2`. The counterexample is recorded as
+`Submission.Ado.ι_lie_mem_genPow_two`.
+
+## Findings worth reporting upstream
+
+* Five benchmark problems cannot be solved as generated, because their
+  `ChallengeDeps.lean` contains `sorry` and so any proof of the statement
+  depends on `sorryAx`, which no `config.json` permits: `hadwiger`
+  (the `Submodule` proof fields of `valuations` are `sorry`),
+  `conway_knot_not_smoothly_slice`, `conway_knot_topologically_slice`,
+  `exists_topologically_slice_not_smoothly_slice` and
+  `derived_solidification_free_CW_homology`.
+* `LeanEval/KnotTheory/Quadrisecant.lean` and `LeanEval/Geometry/FaryMilnor.lean`
+  write `ContDiff ℝ ⊤ r`, not `ContDiff ℝ (⊤ : ℕ∞) r`. Since Mathlib's
+  smoothness exponent has type `WithTop ℕ∞`, the bare `⊤` is `ω`, so both files
+  quantify over *real-analytic* knots and analytic isotopies, not smooth ones.
+  Every other knot file in the repository (`KnotTheory/Prelude.lean`,
+  `KnotTheory/PardonDistortion.lean`) writes the ascribed `(⊤ : ℕ∞)`, so this
+  looks unintended.
+* `conway_knot_not_smoothly_slice` is exposed to a vacuity attack that its
+  sibling `exists_topologically_slice_not_smoothly_slice` is protected against.
+  `PLKnot` does not bundle simplicity, and no smooth knot's image can be
+  ambient-homeomorphic to a self-intersecting polyline, so if the 78-vertex
+  `braidClosure 4 conwayBraidWord` layout has a coordinate bug making it
+  self-intersecting, `¬ conwayKnot.SmoothlySlice` is provable in an afternoon
+  without any of Piccirillo's theorem. The companion hole `conwayKnot_isSimple`
+  belongs to a *different* manifest problem, so it does not clamp this one.
+
+## Next steps
+
+1. Confirm #945 is accepted and that `adoCharZero` appears in
+   `results/vilin97.json` and on <https://lean-lang.org/eval/>.
+2. `adoIwasawa`, in dependency order: full PBW (§1 of `ado-informal.md`) →
+   restricted Lie algebras and `u(𝔤)` → restricted PBW (Thm 7.3) →
+   finite-dimensional `p`-envelope (Lem 7.4) → Thm 7.5. Characteristic `p` needs
+   no structure theory at all, so §7 is short *given PBW*; PBW's
+   linear-independence half is the whole cost.
 
 ## Build setup
 
-The worktree has no `.lake`. Rather than clone a second Mathlib (only ~18 GB of
-disk free), each workspace symlinks the prebuilt one:
+Each workspace needs Mathlib. Rather than clone a second copy, hard-link the
+prebuilt packages of a warmed-up workspace:
 
 ```bash
-ln -sfn /Users/vasil/Github/lean-eval/.lake/packages generated/<id>/.lake/packages
-cp /Users/vasil/Github/lean-eval/lake-manifest.json generated/<id>/
+mkdir -p generated/<id>/.lake
+cp -al <warm-workspace>/.lake/packages generated/<id>/.lake/packages
+cd generated/<id> && lake update && lake build
 ```
 
-Both are gitignored, so this does not travel with the repo; redo it after a
-fresh clone. Peak RSS during builds stays under 3 GB.
+Both `.lake` and `lake-manifest.json` are gitignored, so this does not travel
+with the repository; redo it after a fresh clone. Peak RSS stays under 7 GB.
 
 ## Checkpointing
 
 `leanprover/lean-eval` is not writable by this account
 (`Permission to leanprover/lean-eval.git denied to Vilin97`), so checkpoints go
-to the private repo `Vilin97/lean-eval-ado`, matching the existing per-problem
-naming (`lean-eval-green-tao`, `lean-eval-szemeredi`, …). Delete it if it is not
-wanted.
-
-## Next steps, in dependency order
-
-1. `Submission/Ado/PBW/SymAction.lean` — the action of `L` on `MvPolynomial (Fin n) K`
-   defined by well-founded recursion on `(word length, index)`. This is the
-   single highest-risk file in the project and blocks §3, §4 and §7.
-2. `Submission/Ado/PBW/{Basis,Corollaries}.lean` — spanning by bubble-sort
-   induction on inversions, independence by triangularity, then `ι` injective,
-   `L ∩ J² = ⊥`, and `finrank (U/Jᵐ)`.
-3. `Submission/Ado/Restricted/` — given PBW this finishes the **characteristic-`p`
-   half of `adoIwasawa`** with no structure theory at all, and is the only
-   complete result reachable early.
-4. The characteristic-zero chain: nilradical → `[L,L] ∩ rad` nilpotent →
-   Birkhoff → the extension step → solvable → Casimir/Weyl/Whitehead/Levi.
-
-Two things worth reporting upstream to `leanprover/lean-eval` independently of
-this work:
-
-* `hadwiger` cannot be solved as generated — `valuations`' `Submodule` proof
-  fields are `sorry` in `ChallengeDeps.lean`, so any proof of the statement
-  depends on `sorryAx`, which `config.json` does not permit. The same `sorry`
-  taint is in `conway_knot_not_smoothly_slice`,
-  `conway_knot_topologically_slice`,
-  `exists_topologically_slice_not_smoothly_slice` and
-  `derived_solidification_free_CW_homology`.
-* Nothing has been submitted to the leaderboard, because there is nothing
-  submittable: a submission is scored only if comparator accepts it, and a
-  `sorry` in `Submission.lean` is rejected outright.
+to `Vilin97/lean-eval-ado`, matching the existing per-problem naming
+(`lean-eval-green-tao`, `lean-eval-furstenberg-measure`, …).
