@@ -23,6 +23,10 @@ import Submission.Morley.PrimeBig
 import Submission.Morley.IndepIndisc
 import Submission.Morley.SatExists
 import Submission.Morley.TCFinish
+import Submission.Morley.SatPrinciple
+import Submission.Morley.SatCore
+import Submission.Morley.UniformFinite
+import Submission.Morley.Counting
 import Submission.Morley.SatTypes
 import Submission.Morley.SatStep
 import Submission.Morley.Ramsey
@@ -36,7 +40,8 @@ theorem morley_categoricity_theorem (L : FirstOrder.Language.{0, 0}) (hL : L.car
     (hInf : ∀ M : FirstOrder.Language.Theory.ModelType.{0, 0, 0} T, Infinite M)
     {κ : Cardinal.{0}} (hκ : ℵ₀ < κ) (hcat : κ.Categorical T)
     {μ : Cardinal.{0}} (hμ : ℵ₀ < μ) :
-    μ.Categorical T := by
-  sorry
+    μ.Categorical T :=
+  Submission.Morley.morley_categoricity (Submission.Morley.saturationPrinciple L)
+    (Submission.Morley.omegaStableTwoCardinal L) hL hT hInf hκ hcat hμ
 
 end Submission
